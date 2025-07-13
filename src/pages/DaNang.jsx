@@ -170,7 +170,7 @@ export default function DaNang() {
                 "text-size": 14,
                 "text-anchor": "center",
                 "text-allow-overlap": false,
-                "visibility": "visible", // ⬅️ Quan trọng!
+                "visibility": "visible",
             },
             paint: {
                 "text-color": "#333333",

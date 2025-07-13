@@ -181,6 +181,13 @@ export default function DaNang() {
 
         // 4. Hover popup
         map.current.on("mousemove", "da-nang-fill", (e) => {
+            const zoom = map.current.getZoom();
+
+            if (zoom >= 12) {
+                popupRef.current.remove();
+                return;
+            }
+
             const name = e.features[0].properties.NAME_2 || e.features[0].properties.NAME_1;
             popupRef.current
                 .setLngLat(e.lngLat)

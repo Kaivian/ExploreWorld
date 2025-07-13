@@ -188,66 +188,63 @@ export default function VietnamMap() {
     };
 
     const addVietnamProvinceBorders = async () => {
-        if (provinceBorderAdded.current) return;
-
         if (!geojsonRef.current) {
             const response = await fetch("/data/vietnam_merged_provinces_fixed.json");
             geojsonRef.current = await response.json();
         }
 
+        const data = geojsonRef.current;
+
         if (!map.current.getSource("vn-provinces")) {
             map.current.addSource("vn-provinces", {
                 type: "geojson",
-                data: geojsonRef.current,
+                data,
+            });
+        } else {
+            map.current.getSource("vn-provinces").setData(data);
+        }
+
+        if (!map.current.getLayer("vn-province-fill-base")) {
+            map.current.addLayer({
+                id: "vn-province-fill-base",
+                type: "fill",
+                source: "vn-provinces",
+                paint: {
+                    "fill-color": "#ffffff",
+                    "fill-opacity": 0.0,
+                },
             });
         }
 
-        map.current.addLayer({
-            id: "vn-province-fill-base",
-            type: "fill",
-            source: "vn-provinces",
-            paint: {
-                "fill-color": "#ffffff",
-                "fill-opacity": 0.0,
-            },
-        });
-
-        map.current.addLayer({
-            id: "vn-province-hover",
-            type: "fill",
-            source: "vn-provinces",
-            paint: {
-                "fill-color": "#999999",
-                "fill-opacity": 0.4,
-                "fill-opacity-transition": {
-                    duration: 300,
-                    delay: 0
+        if (!map.current.getLayer("vn-province-hover")) {
+            map.current.addLayer({
+                id: "vn-province-hover",
+                type: "fill",
+                source: "vn-provinces",
+                paint: {
+                    "fill-color": "#999999",
+                    "fill-opacity": 0.4,
                 },
-                "fill-color-transition": {
-                    duration: 300,
-                    delay: 0
-                }
-            },
-            filter: ["==", "GID_1", ""],
-        });
+                filter: ["==", "GID_1", ""],
+            });
+        }
 
-        map.current.addLayer({
-            id: "vn-province-border",
-            type: "line",
-            source: "vn-provinces",
-            paint: {
-                "line-color": "#1e90ff",
-                "line-width": 2,
-                "line-opacity": 1,
-            },
-        });
+        if (!map.current.getLayer("vn-province-border")) {
+            map.current.addLayer({
+                id: "vn-province-border",
+                type: "line",
+                source: "vn-provinces",
+                paint: {
+                    "line-color": "#1e90ff",
+                    "line-width": 2,
+                },
+            });
+        }
 
         map.current.on("mousemove", "vn-province-fill-base", (e) => {
-            if (!e.features.length) return;
             const feature = e.features[0];
             const gid = feature.properties.GID_1;
             const name = feature.properties.NAME_1;
-
             map.current.setFilter("vn-province-hover", ["==", "GID_1", gid]);
 
             popupRef.current
@@ -264,6 +261,7 @@ export default function VietnamMap() {
 
         provinceBorderAdded.current = true;
     };
+
 
     const removeVietnamProvinceBorders = () => {
         const layersToRemove = [
@@ -301,13 +299,12 @@ export default function VietnamMap() {
         if (zoom >= 8 && !styleSwitched.current) {
             styleSwitched.current = true;
             addVietnamProvinceBorders();
-            return;
         }
 
         if (zoom < 8 && styleSwitched.current) {
             styleSwitched.current = false;
+            provinceBorderAdded.current = false;
             removeVietnamProvinceBorders();
-            return;
         }
 
         if (styleSwitched.current && zoom >= 8) {
@@ -358,7 +355,22 @@ export default function VietnamMap() {
 
             provinceBorderAdded.current = false;
             provinceLabelAdded.current = false;
+
+            const zoom = map.current.getZoom();
+
+            if (zoom >= 6 && zoom < 8) {
+                await addVietnamProvinceLabels();
+                removeVietnamTitleLabel();
+            } else if (zoom < 6) {
+                addVietnamTitleLabel();
+            }
+
+            if (zoom >= 8) {
+                styleSwitched.current = true;
+                await addVietnamProvinceBorders();
+            }
         });
+
 
         map.current.on("click", "vn-province-fill-base", (e) => {
             if (!e.features.length) return;

@@ -13,7 +13,7 @@ export default function SearchBar() {
       <form
         className="mx-auto"
         onSubmit={handleSubmit}
-        style={{ width: "70vw", maxWidth: "500px" }}
+        style={{ width: "60vw", maxWidth: "500px" }}
       >
         <div className="input-group rounded-pill border bg-white shadow-sm">
           <input

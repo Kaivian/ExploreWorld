@@ -35,6 +35,21 @@ export default function VietnamMap() {
     const geojsonRef = useRef(null);
     const navigate = useNavigate();
 
+    const ensureVietnamTitleOnTop = () => {
+        if (!map.current.getLayer("vn-title-label")) return;
+
+        const layers = map.current.getStyle().layers;
+        if (!layers) return;
+
+        const topSymbolLayer = [...layers]
+            .reverse()
+            .find(l => l.type === "symbol" && l.id !== "vn-title-label");
+
+        if (topSymbolLayer) {
+            map.current.moveLayer("vn-title-label", topSymbolLayer.id);
+        }
+    };
+
     const addGrayCountriesLayer = () => {
         if (!map.current.getSource("country-boundaries")) {
             map.current.addSource("country-boundaries", {
@@ -56,6 +71,8 @@ export default function VietnamMap() {
                 filter: ["!=", ["get", "iso_3166_1_alpha_3"], "VNM"],
             });
         }
+
+        ensureVietnamTitleOnTop();
     };
 
     const hideLabels = () => {
@@ -72,51 +89,53 @@ export default function VietnamMap() {
     };
 
     const addVietnamTitleLabel = () => {
-        if (!map.current.getSource("vn-title")) {
-            map.current.addSource("vn-title", {
-                type: "geojson",
-                data: {
-                    type: "FeatureCollection",
-                    features: [
-                        {
-                            type: "Feature",
-                            geometry: {
-                                type: "Point",
-                                coordinates: [105.854444, 21.028511],
-                            },
-                            properties: {
-                                title: "Việt Nam",
-                            },
-                        },
-                    ],
-                },
-            });
-        }
-
-        if (!map.current.getLayer("vn-title-label")) {
-            map.current.addLayer({
-                id: "vn-title-label",
-                type: "symbol",
-                source: "vn-title",
-                layout: {
-                    "text-field": ["get", "title"],
-                    "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
-                    "text-size": 24,
-                    "text-anchor": "center",
-                    "text-allow-overlap": true,
-                },
-                paint: {
-                    "text-color": "#000000",
-                    "text-halo-color": "#ffffff",
-                    "text-halo-width": 2,
-                },
-            });
-        }
-
+        // Nếu đã có, xóa đi rồi thêm lại sau cùng
         if (map.current.getLayer("vn-title-label")) {
-            map.current.moveLayer("vn-title-label");
+            map.current.removeLayer("vn-title-label");
         }
+        if (map.current.getSource("vn-title")) {
+            map.current.removeSource("vn-title");
+        }
+
+        map.current.addSource("vn-title", {
+            type: "geojson",
+            data: {
+                type: "FeatureCollection",
+                features: [
+                    {
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [105.854444, 21.028511],
+                        },
+                        properties: {
+                            title: "Việt Nam",
+                        },
+                    },
+                ],
+            },
+        });
+
+        map.current.addLayer({
+            id: "vn-title-label",
+            type: "symbol",
+            source: "vn-title",
+            layout: {
+                "text-field": ["get", "title"],
+                "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                "text-size": 24,
+                "text-anchor": "center",
+                "text-allow-overlap": true,
+                "text-ignore-placement": true,
+            },
+            paint: {
+                "text-color": "#000000",
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 2,
+            },
+        });
     };
+
 
     const removeVietnamTitleLabel = () => {
         if (map.current.getLayer("vn-title-label")) {
@@ -171,6 +190,7 @@ export default function VietnamMap() {
         });
 
         provinceLabelAdded.current = true;
+        ensureVietnamTitleOnTop();
     };
 
     const removeVietnamProvinceLabels = () => {
@@ -260,8 +280,8 @@ export default function VietnamMap() {
         });
 
         provinceBorderAdded.current = true;
+        ensureVietnamTitleOnTop();
     };
-
 
     const removeVietnamProvinceBorders = () => {
         const layersToRemove = [
@@ -325,25 +345,28 @@ export default function VietnamMap() {
             zoom: savedZoom,
             maxZoom: 9
         });
+
         localStorage.removeItem("mapZoom");
         localStorage.removeItem("mapCenter");
 
         map.current.on("load", () => {
             addGrayCountriesLayer();
             hideLabels();
+            addVietnamTitleLabel();
         });
 
         map.current.on("idle", () => {
-            const zoom = map.current.getZoom();
+            const layersNeeded = [
+                "gray-other-countries",
+                "vn-title-label",
+                provinceLabelAdded.current ? "vn-province-labels" : null,
+                provinceBorderAdded.current ? "vn-province-border" : null,
+            ].filter(Boolean);
 
-            if (zoom >= 6 && !provinceLabelAdded.current) {
-                addVietnamProvinceLabels();
-            } else if (zoom < 6 && !map.current.getLayer("vn-title-label")) {
-                addVietnamTitleLabel();
-            }
+            const allLoaded = layersNeeded.every(layerId => map.current.getLayer(layerId));
 
-            if (zoom >= 8 && styleSwitched.current) {
-                addVietnamProvinceBorders();
+            if (allLoaded) {
+                ensureVietnamTitleOnTop();
             }
         });
 
@@ -360,17 +383,18 @@ export default function VietnamMap() {
 
             if (zoom >= 6 && zoom < 8) {
                 await addVietnamProvinceLabels();
-                removeVietnamTitleLabel();
+                removeVietnamTitleLabel(); // remove nếu đã có
             } else if (zoom < 6) {
-                addVietnamTitleLabel();
+                addVietnamTitleLabel(); // 👈 gọi sau cùng
             }
 
             if (zoom >= 8) {
                 styleSwitched.current = true;
                 await addVietnamProvinceBorders();
             }
-        });
 
+            addVietnamTitleLabel(); // 👈 luôn gọi lại để đảm bảo nằm trên cùng
+        });
 
         map.current.on("click", "vn-province-fill-base", (e) => {
             if (!e.features.length) return;

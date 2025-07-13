@@ -183,7 +183,7 @@ export default function DaNang() {
         map.current.on("mousemove", "da-nang-fill", (e) => {
             const zoom = map.current.getZoom();
 
-            if (zoom >= 12) {
+            if (zoom >= 11) {
                 popupRef.current.remove();
                 return;
             }
@@ -233,14 +233,14 @@ export default function DaNang() {
                 map.current.setLayoutProperty(
                     "da-nang-district-labels",
                     "visibility",
-                    z < 12 ? "visible" : "none"
+                    z < 11 ? "visible" : "none"
                 );
             }
 
             const hasBorder = map.current.getLayer("da-nang-border");
-            if (z >= 12 && hasBorder) {
+            if (z >= 11 && hasBorder) {
                 map.current.removeLayer("da-nang-border");
-            } else if (z < 12 && !hasBorder && map.current.getSource("da-nang")) {
+            } else if (z < 11 && !hasBorder && map.current.getSource("da-nang")) {
                 map.current.addLayer({
                     id: "da-nang-border",
                     type: "line",
@@ -260,7 +260,7 @@ export default function DaNang() {
                     map.current.setLayoutProperty(
                         layer.id,
                         "visibility",
-                        z >= 12 ? "visible" : "none"
+                        z >= 11 ? "visible" : "none"
                     );
                 }
             });
@@ -272,7 +272,7 @@ export default function DaNang() {
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: "mapbox://styles/mapbox/outdoors-v12",
+            style: "mapbox://styles/mapbox/navigation-day-v1",
             center,
             zoom,
             minZoom: 8,

@@ -13,7 +13,7 @@ export default function DaNang() {
     const daNangMapRef = useRef(null);
     const navigate = useNavigate();
 
-    const center = [108.2022, 15.5544];
+    const center = [108.2022, 15.8544];
     const zoom = 9;
 
     // Tính diện tích polygon
@@ -270,14 +270,20 @@ export default function DaNang() {
     useEffect(() => {
         if (map.current) return;
 
+        const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || zoom;
+        const savedCenter = JSON.parse(localStorage.getItem("mapCenter")) || center;
+
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: "mapbox://styles/mapbox/navigation-day-v1",
-            center,
-            zoom,
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: savedCenter,
+            zoom: savedZoom <= 8 ? savedZoom : zoom,
             minZoom: 8,
             maxZoom: 15,
         });
+
+        localStorage.removeItem("mapZoom");
+        localStorage.removeItem("mapCenter");
 
         map.current.on("load", () => {
             hideDefaultLabels();
@@ -285,9 +291,5 @@ export default function DaNang() {
         });
     }, []);
 
-    return (
-        <div className="fixed top-0 left-0 w-screen h-screen overflow-hidden">
-            <div ref={mapContainer} className="w-full h-full" />
-        </div>
-    );
+    return <div ref={mapContainer} style={{ height: "100vh", width: "100vw" }} />;
 }

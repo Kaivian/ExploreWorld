@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -9,18 +10,28 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="position-fixed top-0 start-50 translate-middle-x z-3 w-100 px-3 py-2">
+    <div className="position-fixed top-0 start-50 translate-middle-x z-3 w-100 py-2">
       <form
         className="mx-auto"
         onSubmit={handleSubmit}
         style={{ width: "60vw", maxWidth: "500px" }}
       >
-        <div className="input-group rounded-pill border bg-white shadow-sm">
+        <div className="input-group rounded-pill bg-white shadow-sm">
           <input
             type="text"
-            className="form-control border-0 bg-transparent px-3"
+            className="form-control bg-transparent px-3 rounded-pill"
+            style={{
+              outline: "none",
+              border: "none", // ❌ xoá viền đen mặc định
+              boxShadow: isFocused
+                ? "0 0 0 0.2rem rgba(0, 123, 255, 0.3)"
+                : "none",
+              transition: "box-shadow 0.2s ease",
+            }}
             placeholder="Tìm món ăn..."
             value={query}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             onChange={(e) => setQuery(e.target.value)}
           />
           <button

@@ -148,6 +148,9 @@ export default function VietnamMap() {
 
     const addVietnamProvinceLabels = async () => {
         if (map.current.getSource("vn-label-centroids")) return;
+        if (map.current.getLayer("vn-province-labels")) {
+            map.current.removeLayer("vn-province-labels");
+        }
 
         if (!geojsonRef.current) {
             const response = await fetch("/data/VN-MAP.json");
@@ -163,13 +166,17 @@ export default function VietnamMap() {
             };
         });
 
-        map.current.addSource("vn-label-centroids", {
-            type: "geojson",
-            data: {
-                type: "FeatureCollection",
-                features: centroidFeatures,
-            },
-        });
+        try {
+            map.current.addSource("vn-label-centroids", {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: centroidFeatures,
+                },
+            });
+        } catch (err) {
+            return;
+        }
 
         map.current.addLayer({
             id: "vn-province-labels",
@@ -332,84 +339,128 @@ export default function VietnamMap() {
         }
     };
 
+    function waitForMapLoad(map) {
+        return new Promise(resolve => {
+            if (map.loaded()) {
+                resolve();
+            } else {
+                map.once("load", () => resolve());
+            }
+        });
+    }
+
+    function waitForStyleLoad(map) {
+        return new Promise(resolve => {
+            map.once("style.load", () => resolve());
+        });
+    }
+
     useEffect(() => {
         if (map.current) return;
 
-        const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || 5;
-        const savedCenter = JSON.parse(localStorage.getItem("mapCenter")) || [108.2772, 14.0583];
+        const initMap = async () => {
+            const isFirstVisit = localStorage.getItem("firstVisit") !== "false";
+            const savedCenter = JSON.parse(localStorage.getItem("mapCenter")) || [108.2772, 16.0583];
+            const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || (isFirstVisit ? 0 : 5);
 
-        map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: "mapbox://styles/mapbox/outdoors-v12",
-            center: savedCenter,
-            zoom: savedZoom,
-            maxZoom: 9
-        });
+            map.current = new mapboxgl.Map({
+                container: mapContainer.current,
+                style: "mapbox://styles/mapbox/outdoors-v12",
+                center: savedCenter,
+                zoom: savedZoom,
+                maxZoom: 9,
+            });
 
-        localStorage.removeItem("mapZoom");
-        localStorage.removeItem("mapCenter");
+            // Dọn dẹp localStorage nếu có
+            localStorage.removeItem("mapCenter");
+            localStorage.removeItem("mapZoom");
 
-        map.current.on("load", () => {
+            await waitForMapLoad(map.current);
+
             addGrayCountriesLayer();
             hideLabels();
             addVietnamTitleLabel();
-        });
 
-        map.current.on("idle", () => {
-            const layersNeeded = [
-                "gray-other-countries",
-                "vn-title-label",
-                provinceLabelAdded.current ? "vn-province-labels" : null,
-                provinceBorderAdded.current ? "vn-province-border" : null,
-            ].filter(Boolean);
-
-            const allLoaded = layersNeeded.every(layerId => map.current.getLayer(layerId));
-
-            if (allLoaded) {
-                ensureVietnamTitleOnTop();
+            // 👉 Chỉ flyTo khi lần đầu
+            if (isFirstVisit) {
+                map.current.flyTo({
+                    zoom: 5,
+                    duration: 4000,
+                    essential: true,
+                    center: [108.2772, 16.0583],
+                });
+                localStorage.setItem("firstVisit", "false");
             }
-        });
 
-        map.current.on("zoom", handleZoom);
-
-        map.current.on("style.load", async () => {
             addGrayCountriesLayer();
             hideLabels();
+            addVietnamTitleLabel();
 
-            provinceBorderAdded.current = false;
-            provinceLabelAdded.current = false;
+            map.current.on("idle", () => {
+                const layersNeeded = [
+                    "gray-other-countries",
+                    "vn-title-label",
+                    provinceLabelAdded.current ? "vn-province-labels" : null,
+                    provinceBorderAdded.current ? "vn-province-border" : null,
+                ].filter(Boolean);
 
-            const zoom = map.current.getZoom();
+                const allLoaded = layersNeeded.every(layerId => map.current.getLayer(layerId));
+                if (allLoaded) {
+                    ensureVietnamTitleOnTop();
+                }
+            });
 
-            if (zoom >= 6 && zoom < 8) {
-                await addVietnamProvinceLabels();
-                removeVietnamTitleLabel(); // remove nếu đã có
-            } else if (zoom < 6) {
-                addVietnamTitleLabel(); // 👈 gọi sau cùng
-            }
+            map.current.on("zoom", handleZoom);
 
-            if (zoom >= 8) {
-                styleSwitched.current = true;
-                await addVietnamProvinceBorders();
-            }
+            map.current.on("style.load", async () => {
+                await waitForStyleLoad(map.current);
 
-            addVietnamTitleLabel(); // 👈 luôn gọi lại để đảm bảo nằm trên cùng
-        });
+                addGrayCountriesLayer();
+                hideLabels();
 
-        map.current.on("click", "vn-province-fill-base", (e) => {
-            if (!e.features.length) return;
-            const feature = e.features[0];
-            const name = feature.properties.NAME_1;
+                provinceBorderAdded.current = false;
+                provinceLabelAdded.current = false;
 
-            if (name.includes("Thành phố Đà Nẵng")) {
-                navigate("/da-nang");
-            }
-        });
+                const zoom = map.current.getZoom();
+
+                if (zoom >= 6 && zoom < 8) {
+                    await addVietnamProvinceLabels();
+                    removeVietnamTitleLabel();
+                } else if (zoom < 6) {
+                    addVietnamTitleLabel();
+                }
+
+                if (zoom >= 8) {
+                    styleSwitched.current = true;
+                    await addVietnamProvinceBorders();
+                }
+
+                // Đảm bảo nhãn Việt Nam luôn hiện sau cùng
+                if (!map.current.getLayer("vn-title-label")) {
+                    addVietnamTitleLabel();
+                } else {
+                    ensureVietnamTitleOnTop();
+                }
+            });
+
+            map.current.on("click", "vn-province-fill-base", (e) => {
+                if (!e.features.length) return;
+                const feature = e.features[0];
+                const name = feature.properties.NAME_1;
+
+                if (name.includes("Thành phố Đà Nẵng")) {
+                    const zoom = map.current.getZoom();
+                    const center = map.current.getCenter();
+                    localStorage.setItem("mapZoom", zoom);
+                    localStorage.setItem("mapCenter", JSON.stringify([center.lng, center.lat]));
+
+                    navigate("/da-nang");
+                }
+            });
+        };
+
+        initMap();
     }, []);
 
-    return (
-        <div className="fixed top-0 left-0 w-screen h-screen overflow-hidden">
-            <div ref={mapContainer} className="w-full h-full" />
-        </div>
-    );
+    return <div ref={mapContainer} style={{ height: "100vh", width: "100vw" }} />;
 }

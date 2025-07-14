@@ -222,7 +222,7 @@ export default function DaNang() {
         map.current.on("zoom", () => {
             const z = map.current.getZoom();
             const center = map.current.getCenter();
-            if (z < 9) {
+            if (z <= 8) {
                 localStorage.setItem("mapZoom", z);
                 localStorage.setItem("mapCenter", JSON.stringify([center.lng, center.lat]));
                 navigate("/");
@@ -277,7 +277,7 @@ export default function DaNang() {
             container: mapContainer.current,
             style: "mapbox://styles/mapbox/streets-v12",
             center: savedCenter,
-            zoom: savedZoom <= 8 ? savedZoom : zoom,
+            zoom: Math.max(savedZoom, 9),
             minZoom: 8,
             maxZoom: 15,
         });

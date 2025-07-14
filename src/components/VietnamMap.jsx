@@ -216,7 +216,7 @@ export default function VietnamMap() {
 
     const addVietnamProvinceBorders = async () => {
         if (!geojsonRef.current) {
-            const response = await fetch("/data/vietnam_merged_provinces_fixed.json");
+            const response = await fetch("/data/VN-MAP.json");
             geojsonRef.current = await response.json();
         }
 
@@ -323,18 +323,18 @@ export default function VietnamMap() {
             addVietnamTitleLabel();
         }
 
-        if (zoom >= 8 && !styleSwitched.current) {
+        if (zoom >= 7 && !styleSwitched.current) {
             styleSwitched.current = true;
             addVietnamProvinceBorders();
         }
 
-        if (zoom < 8 && styleSwitched.current) {
+        if (zoom < 7 && styleSwitched.current) {
             styleSwitched.current = false;
             provinceBorderAdded.current = false;
             removeVietnamProvinceBorders();
         }
 
-        if (styleSwitched.current && zoom >= 8) {
+        if (styleSwitched.current && zoom >= 7) {
             addVietnamProvinceBorders();
         }
     };
@@ -423,14 +423,14 @@ export default function VietnamMap() {
 
                 const zoom = map.current.getZoom();
 
-                if (zoom >= 6 && zoom < 8) {
+                if (zoom >= 6 && zoom < 7) {
                     await addVietnamProvinceLabels();
                     removeVietnamTitleLabel();
                 } else if (zoom < 6) {
                     addVietnamTitleLabel();
                 }
 
-                if (zoom >= 8) {
+                if (zoom >= 7) {
                     styleSwitched.current = true;
                     await addVietnamProvinceBorders();
                 }

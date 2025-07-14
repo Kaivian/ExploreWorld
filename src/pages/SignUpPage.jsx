@@ -7,13 +7,20 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 function SignUpPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const navigate = useNavigate();
 
+    const isValidUsername = (username) => /^[a-zA-Z0-9_.]{4,20}$/.test(username);
+
     const handleSignUp = async () => {
+        if (!isValidUsername(username)) {
+            alert('Username must be 4–20 characters and can only contain letters, numbers, _ and .');
+            return;
+        }
+
         if (password !== confirmPassword) {
             alert('Passwords do not match.');
             return;
@@ -90,13 +97,13 @@ function SignUpPage() {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Full Name</label>
+                        <label className="form-label">Username</label>
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Enter your full name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter your username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                         />
                     </div>
 

@@ -1,9 +1,80 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { Link } from 'react-router-dom';
+
+function usePostLoginRedirect() {
+    return () => {
+        const path = sessionStorage.getItem("postLoginRedirect") || "/dashboard";
+        sessionStorage.removeItem("postLoginRedirect");
+        return path;
+    };
+}
 
 function LoginPage() {
-    const [showPassword, setShowPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+
+    // Handle login with email/password
+    const handleNormalLogin = async () => {
+        try {
+            const res = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!res.ok) throw new Error('Login failed');
+
+            const data = await res.json();
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
+            usePostLoginRedirect();
+        } catch (err) {
+            console.error('Login error:', err);
+            alert('Login failed. Please check your credentials.');
+        }
+    };
+
+    // Handle login with Google
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const idToken = credentialResponse.credential;
+            const decoded = jwtDecode(idToken);
+            console.log('Google user:', decoded);
+
+            const res = await fetch('http://localhost:8080/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: idToken }),
+            });
+
+            if (!res.ok) throw new Error('Google login failed');
+
+            const data = await res.json();
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
+            usePostLoginRedirect();
+        } catch (err) {
+            console.error('Google login error:', err);
+            alert('Google login failed.');
+        }
+    };
 
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -20,7 +91,13 @@ function LoginPage() {
 
                     <div className="mb-3">
                         <label className="form-label">Email address</label>
-                        <input type="email" className="form-control" placeholder="Enter your email address" />
+                        <input
+                            type="email"
+                            className="form-control"
+                            placeholder="Enter your email address"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
                     </div>
 
                     <div className="mb-3">
@@ -33,7 +110,9 @@ function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 className="form-control"
                                 placeholder="Enter your password"
-                                style={{ borderRight: 'none'}}
+                                style={{ borderRight: 'none' }}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                             <span
                                 className="input-group-text bg-white"
@@ -46,7 +125,7 @@ function LoginPage() {
                     </div>
 
                     <div className="d-grid mb-3">
-                        <button className="btn btn-dark">Log In</button>
+                        <button className="btn btn-dark" onClick={handleNormalLogin}>Log In</button>
                     </div>
 
                     <div className="text-center mb-3">
@@ -55,15 +134,18 @@ function LoginPage() {
                     </div>
 
                     <div className="d-grid gap-2">
-                        <button className="btn btn-outline-secondary">
-                            <i className="bi bi-google me-2"></i> Continue with Google
-                        </button>
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => {
+                                console.log('Google login failed');
+                            }}
+                        />
                     </div>
                 </div>
 
                 <div className="border-top px-4 py-3 text-center" style={{ backgroundColor: '#f2f2f2' }}>
                     <span className="text-muted">Don’t have an account yet?</span>{' '}
-                    <a href="/sign-up" className="fw-semibold text-decoration-none">Sign up</a>
+                    <Link to="/sign-up" className="fw-semibold text-decoration-none">Sign up</Link>
                 </div>
             </div>
         </div>

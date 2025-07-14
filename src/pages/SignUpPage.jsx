@@ -1,10 +1,80 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { Link } from 'react-router-dom';
 
 function SignUpPage() {
-    const [showPassword, setShowPassword] = useState(true);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const navigate = useNavigate();
+
+    const handleSignUp = async () => {
+        if (password !== confirmPassword) {
+            alert('Passwords do not match.');
+            return;
+        }
+
+        try {
+            const res = await fetch('http://localhost:8080/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, email, password }),
+            });
+
+            if (!res.ok) throw new Error('Registration failed');
+
+            const data = await res.json();
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
+            const redirectTo = sessionStorage.getItem('postLoginRedirect') || '/dashboard';
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate(redirectTo);
+        } catch (err) {
+            console.error('Signup error:', err);
+            alert('Signup failed.');
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const idToken = credentialResponse.credential;
+            const decoded = jwtDecode(idToken);
+            console.log('Google user:', decoded);
+
+            const res = await fetch('http://localhost:8080/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: idToken }),
+            });
+
+            if (!res.ok) throw new Error('Google signup failed');
+
+            const data = await res.json();
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
+            const redirectTo = sessionStorage.getItem('postLoginRedirect') || '/dashboard';
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate(redirectTo);
+        } catch (err) {
+            console.error('Google signup error:', err);
+            alert('Google signup failed.');
+        }
+    };
 
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -21,15 +91,26 @@ function SignUpPage() {
 
                     <div className="mb-3">
                         <label className="form-label">Full Name</label>
-                        <input type="text" className="form-control" placeholder="Enter your full name" />
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Email address</label>
-                        <input type="email" className="form-control" placeholder="Enter your email address" />
+                        <input
+                            type="email"
+                            className="form-control"
+                            placeholder="Enter your email address"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
                     </div>
 
-                    {/* Mật khẩu */}
                     <div className="mb-3">
                         <label className="form-label">Password</label>
                         <div className="input-group">
@@ -37,6 +118,8 @@ function SignUpPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 className="form-control"
                                 placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 style={{ borderRight: 'none' }}
                             />
                             <span
@@ -49,7 +132,6 @@ function SignUpPage() {
                         </div>
                     </div>
 
-                    {/* Xác nhận mật khẩu */}
                     <div className="mb-3">
                         <label className="form-label">Confirm Password</label>
                         <div className="input-group">
@@ -57,6 +139,8 @@ function SignUpPage() {
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 className="form-control"
                                 placeholder="Re-enter your password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 style={{ borderRight: 'none' }}
                             />
                             <span
@@ -70,7 +154,7 @@ function SignUpPage() {
                     </div>
 
                     <div className="d-grid mb-3">
-                        <button className="btn btn-dark">Create Account</button>
+                        <button className="btn btn-dark" onClick={handleSignUp}>Create Account</button>
                     </div>
 
                     <div className="text-center mb-3">
@@ -79,16 +163,18 @@ function SignUpPage() {
                     </div>
 
                     <div className="d-grid gap-2">
-                        <button className="btn btn-outline-secondary">
-                            <i className="bi bi-google me-2"></i> Continue with Google
-                        </button>
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => {
+                                console.log('Google sign-up failed');
+                            }}
+                        />
                     </div>
                 </div>
 
-                {/* Phần chuyển sang login */}
                 <div className="border-top px-4 py-3 text-center" style={{ backgroundColor: '#f2f2f2' }}>
                     <span className="text-muted">Already have an account?</span>{' '}
-                    <a href="/login" className="fw-semibold text-decoration-none">Log in</a>
+                    <Link to="/login" className="fw-semibold text-decoration-none">Log in</Link>
                 </div>
             </div>
         </div>

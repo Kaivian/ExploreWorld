@@ -187,7 +187,10 @@ export default function AuthButtons() {
                             }}
                             onMouseEnter={() => setHovered("signup")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => navigate("/sign-up")}
+                            onClick={() => {
+                                sessionStorage.setItem("postLoginRedirect", window.location.pathname);
+                                navigate("/sign-up");
+                            }}
                         >
                             Sign up
                         </button>
@@ -204,7 +207,10 @@ export default function AuthButtons() {
                             }}
                             onMouseEnter={() => setHovered("login")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => navigate("/login")}
+                            onClick={() => {
+                                sessionStorage.setItem("postLoginRedirect", window.location.pathname);
+                                navigate("/login");
+                            }}
                         >
                             Log in
                         </button>

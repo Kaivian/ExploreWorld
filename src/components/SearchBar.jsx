@@ -22,7 +22,7 @@ export default function SearchBar() {
             className="form-control bg-transparent px-3 rounded-pill"
             style={{
               outline: "none",
-              border: "none", // ❌ xoá viền đen mặc định
+              border: "none",
               boxShadow: isFocused
                 ? "0 0 0 0.2rem rgba(0, 123, 255, 0.3)"
                 : "none",
@@ -45,6 +45,7 @@ export default function SearchBar() {
               height="20"
               fill="#666"
               viewBox="0 0 24 24"
+              style={{ marginTop: "-5px" }}
             >
               <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5
                 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5

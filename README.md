@@ -1,15 +1,9 @@
-# ExploreWorld
-
-A web application built with **React** and **Vite** for exploring the map of Vietnam and its provinces.
-
-## Features
-
-- Interactive Vietnam map with province borders and labels
-- Dynamic zoom and hover effects
-- Built using React, Vite, and Mapbox GL JS
-
-## Getting Started
-
-1. **Install dependencies:**
-   ```bash
-   npm install
+npm install react react-dom react-router-dom
+npm install mapbox-gl
+npm install bootstrap bootstrap-icons
+npm install @fortawesome/fontawesome-free @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome
+npm install @react-oauth/google jwt-decode
+npm install -D vite @vitejs/plugin-react
+npm install -D tailwindcss postcss autoprefixer
+npm install -D eslint @eslint/js eslint-plugin-react-hooks eslint-plugin-react-refresh globals
+npx tailwindcss init -p

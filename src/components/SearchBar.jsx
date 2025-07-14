@@ -28,7 +28,7 @@ export default function SearchBar() {
                 : "none",
               transition: "box-shadow 0.2s ease",
             }}
-            placeholder="Tìm món ăn..."
+            placeholder="Search for food..."
             value={query}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}

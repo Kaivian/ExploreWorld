@@ -28,7 +28,6 @@ public class UserService {
 
         UserEntity user = new UserEntity();
         user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
@@ -52,7 +51,6 @@ public class UserService {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
 
         String token = jwtUtil.generateToken(user.getUsername());
         return new AuthResponseDTO(dto, token);

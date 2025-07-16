@@ -1,12 +1,12 @@
 package com.nomnomatlas.service;
 
-import com.nomnomatlas.model.DishDTO;
-import com.nomnomatlas.model.RestaurantDTO;
-import com.nomnomatlas.model.RestaurantImageDTO;
+import com.nomnomatlas.model.*;
 import com.nomnomatlas.repository.RestaurantRepository;
 import com.nomnomatlas.repository.entity.RestaurantEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,12 +16,24 @@ public class RestaurantService {
     @Autowired
     private RestaurantRepository restaurantRepository;
 
-    public List<RestaurantDTO> getAllRestaurantByCityId(Integer cityId){
+    public List<RestaurantsResponseDTO> getAllRestaurantByCityId(Integer cityId){
         List<RestaurantEntity> restaurantEntityList = restaurantRepository.findByCityEntity_Id(cityId);
         return restaurantEntityList
                 .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .map(entity -> {
+                    RestaurantsResponseDTO dto = new RestaurantsResponseDTO();
+                    dto.setId(entity.getId());
+                    dto.setName(entity.getName());
+                    dto.setLatitude(entity.getLatitude());
+                    dto.setLongitude(entity.getLongitude());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    public RestaurantDTO getRestaurantById(Integer restaurantId){
+        RestaurantEntity restaurantEntity = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+        return mapToDTO(restaurantEntity);
     }
 
     public RestaurantDTO mapToDTO(RestaurantEntity entity){
@@ -38,30 +50,39 @@ public class RestaurantService {
         dto.setCityName(entity.getCityEntity() != null ? entity.getCityEntity().getName() : null);
 
         // Map dish
-        List<DishDTO> dishDTOList = entity.getDishEntityList().stream().map(dishEntity -> {
-            DishDTO dishDTO = new DishDTO();
-            dishDTO.setId(dishEntity.getId());
-            dishDTO.setName(dishEntity.getName());
-            dishDTO.setVideoUrl(dishEntity.getVideoUrl());
-            dishDTO.setHasManualStory(dishEntity.getHasManualStory());
-            dishDTO.setFeature(dishEntity.getFeature());
-            dishDTO.setHistory(dishEntity.getHistory());
-            dishDTO.setCategoryName(dishEntity.getCategoryEntity() != null ? dishEntity.getCategoryEntity().getName() : null);
-            dishDTO.setCityName( dishEntity.getCityEntity() != null ? dishEntity.getCityEntity().getName() : null);
-            return dishDTO;
-        }).collect(Collectors.toList());
-        dto.setDishDTOList(dishDTOList);
+        List<DishResponseDTO> dishResponseDTOList = entity.getDishEntityList()
+                .stream()
+                .map(dishEntity -> {
+                    DishResponseDTO dishResponseDTO = new DishResponseDTO();
+                    dishResponseDTO.setId(dishEntity.getId());
+                    dishResponseDTO.setName(dishEntity.getName());
+                    return dishResponseDTO;
+                }).collect(Collectors.toList());
+        dto.setDishResponseDTOList(dishResponseDTOList);
 
         // Map Image Restaurant
         List<RestaurantImageDTO> restaurantImageDTOList = entity.getRestaurantImageEntityList()
                 .stream()
                 .map(image -> {
-            RestaurantImageDTO imageDTO = new RestaurantImageDTO();
-            imageDTO.setImageUrl(image.getImageUrl());
-            return imageDTO;
-        }).collect(Collectors.toList());
+                    RestaurantImageDTO imageDTO = new RestaurantImageDTO();
+                    imageDTO.setImageUrl(image.getImageUrl());
+                    return imageDTO;
+                }).collect(Collectors.toList());
         dto.setRestaurantImageDTOList(restaurantImageDTOList);
 
+        // Map review
+        List<ReviewDTO> reviewDTOS = entity.getReviewEntityList()
+                .stream()
+                .map(reviewEntity -> {
+                    ReviewDTO reviewDTO = new ReviewDTO();
+                    reviewDTO.setId(reviewEntity.getId());
+                    reviewDTO.setComment(reviewEntity.getComment());
+                    reviewDTO.setRating(reviewEntity.getRating());
+                    reviewDTO.setCreateDate(reviewEntity.getCreateDate());
+                    reviewDTO.setUsername(reviewEntity.getUserEntity() != null ? reviewEntity.getUserEntity().getUsername() : null);
+                    return reviewDTO;
+                }).collect(Collectors.toList());
+        dto.setReviewDTOList(reviewDTOS);
         return dto;
     }
 }

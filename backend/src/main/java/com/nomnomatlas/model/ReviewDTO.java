@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class ReviewDTO {
     private Integer id;
     private String comment;
-    private double rating;
+    private Integer rating;
     private LocalDateTime createDate;
     private String username;
 
@@ -26,11 +26,11 @@ public class ReviewDTO {
         this.comment = comment;
     }
 
-    public double getRating() {
+    public Integer getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(Integer rating) {
         this.rating = rating;
     }
 

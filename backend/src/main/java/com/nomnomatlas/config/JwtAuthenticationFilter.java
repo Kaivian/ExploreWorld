@@ -1,4 +1,3 @@
-
 package com.nomnomatlas.config;
 
 import jakarta.servlet.FilterChain;
@@ -29,23 +28,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getServletPath();
+        String token = getTokenFromRequest(request);
 
-        // ✅ Nếu là API công khai → bỏ qua kiểm tra JWT
-        if (path.startsWith("/api/auth")) {
+        // 🚨 Nếu không có token thì bỏ qua filter
+        if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = getTokenFromRequest(request);
+        try {
+            if (jwtUtil.validateToken(token)) {
+                String username = jwtUtil.extractUsername(token);
 
-        if (token != null && jwtUtil.validateToken(token)) {
-            String username = jwtUtil.extractUsername(token);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(username, null, null);
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(username, null, null);
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (Exception ex) {
+            // 🚫 Không throw exception nữa (tránh 403)
+            System.out.println("Token không hợp lệ hoặc bị lỗi: " + ex.getMessage());
+            // Vẫn tiếp tục filter chain
         }
 
         filterChain.doFilter(request, response);

@@ -1,3 +1,4 @@
+
 package com.nomnomatlas.repository.entity;
 
 import com.nomnomatlas.model.DishDTO;
@@ -15,10 +16,10 @@ public class RestaurantEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name="name")
+    @Column(name="name", nullable = false)
     private String name;
 
-    @Column(name="address")
+    @Column(name="address", nullable = false)
     private String address;
 
     @Column(name="opening_time")
@@ -27,10 +28,10 @@ public class RestaurantEntity {
     @Column(name="closing_time")
     private LocalTime closingTime;
 
-    @Column(name="latitude")
+    @Column(name="latitude", nullable = false)
     private double latitude;
 
-    @Column(name="longitude")
+    @Column(name="longitude", nullable = false)
     private double longitude;
 
     @Column(name="rating")
@@ -43,7 +44,7 @@ public class RestaurantEntity {
     private List<ReviewEntity> reviewEntityList = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "city_id")
+    @JoinColumn(name = "city_id", nullable = false)
     private CityEntity cityEntity;
 
     @ManyToMany

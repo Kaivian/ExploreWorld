@@ -1,4 +1,7 @@
+
 package com.nomnomatlas.model;
+
+import java.util.List;
 
 public class DishDTO {
     private Integer id;
@@ -9,6 +12,8 @@ public class DishDTO {
     private String history;
     private String categoryName;
     private String cityName;
+    private List<DishImageDTO> dishImageDTOList;
+
 
     public Integer getId() {
         return id;
@@ -72,5 +77,13 @@ public class DishDTO {
 
     public void setCityName(String cityName) {
         this.cityName = cityName;
+    }
+
+    public List<DishImageDTO> getDishImageDTOList() {
+        return dishImageDTOList;
+    }
+
+    public void setDishImageDTOList(List<DishImageDTO> dishImageDTOList) {
+        this.dishImageDTOList = dishImageDTOList;
     }
 }

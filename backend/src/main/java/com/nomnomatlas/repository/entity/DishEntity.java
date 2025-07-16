@@ -39,6 +39,9 @@ public class DishEntity {
     @ManyToMany(mappedBy = "dishEntityList")
     private List<RestaurantEntity> restaurantEntityList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "dishEntity")
+    private List<DishImageEntity> dishImageEntityList = new ArrayList<>();
+
     public List<RestaurantEntity> getRestaurantEntityList() {
         return restaurantEntityList;
     }
@@ -109,5 +112,13 @@ public class DishEntity {
 
     public void setCategoryEntity(CategoryEntity categoryEntity) {
         this.categoryEntity = categoryEntity;
+    }
+
+    public List<DishImageEntity> getDishImageEntityList() {
+        return dishImageEntityList;
+    }
+
+    public void setDishImageEntityList(List<DishImageEntity> dishImageEntityList) {
+        this.dishImageEntityList = dishImageEntityList;
     }
 }

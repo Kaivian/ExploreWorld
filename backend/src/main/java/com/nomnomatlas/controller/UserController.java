@@ -4,11 +4,13 @@ import com.nomnomatlas.model.*;
 import com.nomnomatlas.service.UserService;
 import com.nomnomatlas.service.GoogleAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173") // THÊM DÒNG NÀY
 public class UserController {
 
     @Autowired

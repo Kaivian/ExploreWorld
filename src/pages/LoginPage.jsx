@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { jwtDecode } from 'jwt-decode';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 function usePostLoginRedirect() {
     return () => {
@@ -14,11 +14,10 @@ function usePostLoginRedirect() {
 
 function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    // Handle login with email/password
     const handleNormalLogin = async () => {
         try {
             const res = await fetch('http://localhost:8080/api/auth/login', {
@@ -26,7 +25,7 @@ function LoginPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ username, password }),
             });
 
             if (!res.ok) throw new Error('Login failed');
@@ -38,14 +37,14 @@ function LoginPage() {
                 localStorage.setItem('accessToken', data.accessToken);
             }
 
-            usePostLoginRedirect();
+            const getRedirectPath = usePostLoginRedirect();
+            navigate(getRedirectPath());
         } catch (err) {
             console.error('Login error:', err);
             alert('Login failed. Please check your credentials.');
         }
     };
 
-    // Handle login with Google
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
             const idToken = credentialResponse.credential;
@@ -69,7 +68,8 @@ function LoginPage() {
                 localStorage.setItem('accessToken', data.accessToken);
             }
 
-            usePostLoginRedirect();
+            const getRedirectPath = usePostLoginRedirect();
+            navigate(getRedirectPath());
         } catch (err) {
             console.error('Google login error:', err);
             alert('Google login failed.');
@@ -90,13 +90,13 @@ function LoginPage() {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Email address</label>
+                        <label className="form-label">Username</label>
                         <input
-                            type="email"
+                            type="text"
                             className="form-control"
-                            placeholder="Enter your email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                         />
                     </div>
 

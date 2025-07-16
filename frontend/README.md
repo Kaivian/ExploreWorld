@@ -1,4 +1,6 @@
 ```
+npm install
+
 npm install react react-dom react-router-dom
 
 npm install mapbox-gl

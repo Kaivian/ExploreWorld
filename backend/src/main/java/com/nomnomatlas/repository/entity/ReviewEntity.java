@@ -15,7 +15,7 @@ public class ReviewEntity {
     private String comment;
 
     @Column(name="rating")
-    private double rating;
+    private Integer rating;
 
     @Column(name="created_date")
     private LocalDateTime createDate;
@@ -44,11 +44,11 @@ public class ReviewEntity {
         this.comment = comment;
     }
 
-    public double getRating() {
+    public Integer getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(Integer rating) {
         this.rating = rating;
     }
 

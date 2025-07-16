@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 public class CountryController {
     @Autowired
-    CountryService countryService;
+    CountryService countryService;  // Trả về danh sách country và city của country đó
     @GetMapping(value="/api/countries")
     public List<CountryDTO> getAllCountriesWithCities(){
         return countryService.getAllCountriesWithCities();

@@ -15,13 +15,13 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PostMapping(value="/api/auth/register")
+    @PostMapping(value="/api/auth/register") // Nhận request register
     public ResponseEntity<UserDTO> register(@RequestBody RegisterRequestDTO registerRequestDTO){
         UserDTO userDTO = userService.registerUser(registerRequestDTO);
         return ResponseEntity.ok(userDTO);
     }
 
-    @PostMapping(value="/api/auth/login")
+    @PostMapping(value="/api/auth/login") // Nhận request login
     public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequestDTO){
         UserDTO userDTO = userService.login(loginRequestDTO);
         return ResponseEntity.ok(userDTO);

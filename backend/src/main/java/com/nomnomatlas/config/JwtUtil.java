@@ -10,9 +10,8 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY_STRING = "yourSecretKeyMustBeAtLeast32CharsLong!"; // Độ dài >= 32 ký tự
+    private final String SECRET_KEY_STRING = "yourSecretKeyMustBeAtLeast32CharsLong!";
     private final long EXPIRATION_TIME = 86400000; // 1 ngày
-
     private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
 
     public String generateToken(String username) {

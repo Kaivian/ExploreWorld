@@ -13,7 +13,8 @@ public class RestaurantDTO {
     private double rating;
     private String contactInfo;
     private List<RestaurantImageDTO> restaurantImageDTOList;
-    private List<DishDTO> dishDTOList;
+    private List<DishResponseDTO> dishResponseDTOList;
+    private List<ReviewDTO> reviewDTOList;
     private String cityName;
 
     public Integer getId() {
@@ -96,12 +97,12 @@ public class RestaurantDTO {
         this.restaurantImageDTOList = restaurantImageDTOList;
     }
 
-    public List<DishDTO> getDishDTOList() {
-        return dishDTOList;
+    public List<DishResponseDTO> getDishResponseDTOList() {
+        return dishResponseDTOList;
     }
 
-    public void setDishDTOList(List<DishDTO> dishDTOList) {
-        this.dishDTOList = dishDTOList;
+    public void setDishResponseDTOList(List<DishResponseDTO> dishResponseDTOList) {
+        this.dishResponseDTOList = dishResponseDTOList;
     }
 
     public String getCityName() {
@@ -110,5 +111,13 @@ public class RestaurantDTO {
 
     public void setCityName(String cityName) {
         this.cityName = cityName;
+    }
+
+    public List<ReviewDTO> getReviewDTOList() {
+        return reviewDTOList;
+    }
+
+    public void setReviewDTOList(List<ReviewDTO> reviewDTOList) {
+        this.reviewDTOList = reviewDTOList;
     }
 }

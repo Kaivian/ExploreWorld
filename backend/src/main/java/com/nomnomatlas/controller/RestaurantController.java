@@ -20,9 +20,9 @@ public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
 
-    @GetMapping(value="/api/cities/{cityId}/restaurants")  // trả về danh sách restaurant của city đó dựa trên cityId
-    public List<RestaurantsResponseDTO> getAllRestaurantsByCityId(@PathVariable Integer cityId){
-        return restaurantService.getAllRestaurantByCityId(cityId);
+    @GetMapping(value="/api/city/{id}")  // trả về danh sách restaurant của city đó dựa id
+    public List<RestaurantsResponseDTO> getAllRestaurantsByCityId(@PathVariable Integer id){
+        return restaurantService.getAllRestaurantByCityId(id);
     }
 
     @GetMapping(value="/api/restaurants/{id}") // trả về thông tin của 1 restaurant dựa trên restaurantId

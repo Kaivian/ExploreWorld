@@ -28,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/countries/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/restaurants/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cities/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/city/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dish/**").permitAll()
                         .anyRequest().authenticated()
                 );

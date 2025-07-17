@@ -23,7 +23,7 @@ public class RestaurantEntity {
     private String address;
 
     @Column(name="opening_time")
-    private LocalTime openTime;
+    private LocalTime openingTime;
 
     @Column(name="closing_time")
     private LocalTime closingTime;
@@ -82,12 +82,12 @@ public class RestaurantEntity {
         this.address = address;
     }
 
-    public LocalTime getOpenTime() {
-        return openTime;
+    public LocalTime getOpeningTime() {
+        return openingTime;
     }
 
-    public void setOpenTime(LocalTime openTime) {
-        this.openTime = openTime;
+    public void setOpeningTime(LocalTime openingTime) {
+        this.openingTime = openingTime;
     }
 
     public LocalTime getClosingTime() {

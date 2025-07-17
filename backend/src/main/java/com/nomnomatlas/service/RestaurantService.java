@@ -41,7 +41,7 @@ public class RestaurantService {
         dto.setId(entity.getId());
         dto.setName(entity.getName());
         dto.setAddress(entity.getAddress());
-        dto.setOpenTime(entity.getOpenTime().toString());
+        dto.setOpenTime(entity.getOpeningTime().toString());
         dto.setClosingTime(entity.getClosingTime().toString());
         dto.setLatitude(entity.getLatitude());
         dto.setLongitude(entity.getLongitude());

@@ -1,81 +1,77 @@
 import { useEffect, useState } from "react";
 
-export default function SearchBar({ sidebarOpen, sidebarWidth, authWidth }) {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+export default function SearchBar({ onSearchResults, onClearSearch, sidebarOpen, sidebarWidth, authWidth }) {
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
-  const GAP = windowWidth < 768 ? 70 : 20;
-  const MIN_WIDTH = 200;
-  const MAX_WIDTH = 600;
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            const trimmed = query.trim();
+            if (!trimmed) {
+                onClearSearch?.();
+                return;
+            }
 
-  const leftOffset = sidebarOpen ? sidebarWidth + GAP : 0;
-  const rightOffset = authWidth + GAP;
-  const availableWidth = windowWidth - leftOffset - rightOffset;
-  const searchBarWidth = Math.max(Math.min(MAX_WIDTH, availableWidth), MIN_WIDTH);
+            const url = new URL("http://localhost:8080/api/restaurants/search");
+            url.searchParams.append("dishName", trimmed);
 
-  const containerStyle = {
-    position: "fixed",
-    top: 8,
-    left: sidebarOpen ? `${leftOffset}px` : "50%",
-    transform: sidebarOpen ? "none" : "translateX(-50%)",
-    width: `${searchBarWidth}px`,
-    zIndex: 1040,
-    pointerEvents: "auto",
-    transition: "all 0.3s ease",
-  };
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error("Search failed");
+                    return res.json();
+                })
+                .then(data => onSearchResults?.(data))
+                .catch(err => {
+                    console.error("Search failed:", err);
+                    onSearchResults?.([]);
+                });
+        }, 500);
 
-  // Debounce logic
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (query.trim()) {
-        performSearch(query);
-      } else {
-        setResults([]);
-      }
-    }, 500); // delay 500ms
+        return () => clearTimeout(timeout);
+    }, [query, onSearchResults, onClearSearch]);
 
-    return () => clearTimeout(timeout);
-  }, [query]);
+    const GAP = windowWidth < 768 ? 70 : 20;
+    const MIN_WIDTH = 200;
+    const MAX_WIDTH = 600;
 
-  const performSearch = async (text) => {
-    const url = new URL("http://localhost:8080/api/restaurants/search");
+    const effectiveSidebarWidth = sidebarOpen ? sidebarWidth : 0;
+    const leftOffset = sidebarOpen ? effectiveSidebarWidth + GAP : 0;
+    const rightOffset = authWidth + GAP;
+    const availableWidth = windowWidth - leftOffset - rightOffset;
+    const searchBarWidth = Math.max(Math.min(MAX_WIDTH, availableWidth), MIN_WIDTH);
 
-    // Add dish query param
-    url.searchParams.append("dish", text);
+    const containerStyle = {
+        position: "fixed",
+        top: 8,
+        left: `calc(50% - ${searchBarWidth / 2}px - ${authWidth / 2}px)`,
+        transform: "none",
+        width: `${searchBarWidth}px`,
+        zIndex: 1040,
+        pointerEvents: "auto",
+        transition: "all 0.3s ease",
+    };
 
-    try {
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setResults(data);
-      console.log("Search results:", data); // replace this with your render logic
-    } catch (err) {
-      console.error("Search failed:", err);
-    }
-  };
-
-  return (
-    <div style={containerStyle}>
-      <input
-        type="text"
-        className="form-control shadow-sm"
-        placeholder="Search dishes, category, open/close time..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        style={{
-          height: "40px",
-          borderRadius: "999px",
-          padding: "0 16px",
-          width: "100%",
-        }}
-      />
-    </div>
-  );
+    return (
+        <div style={containerStyle}>
+            <input
+                type="text"
+                className="form-control shadow-sm"
+                placeholder="Tìm kiếm món ăn, nhà hàng..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{
+                    height: "40px",
+                    borderRadius: "999px",
+                    padding: "0 16px",
+                    width: "100%",
+                }}
+            />
+        </div>
+    );
 }

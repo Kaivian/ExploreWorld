@@ -1,215 +1,82 @@
-import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import RestaurantDetails from "../components/RestaurantDetails";
+import SearchBar from "../components/SearchBar";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-
-function showReviewForm(place) {
-    const user = JSON.parse(localStorage.getItem("user")); // kiểm tra login
-
-    if (!user) {       
-        alert("Bạn cần đăng nhập để đánh giá.");
-        return;
-    }
-
-    const formHtml = `
-        <div style="font-size: 14px; padding: 6px 10px;">
-            <strong>Đánh giá ${place.name}</strong><br/>
-            <textarea id="review-comment" placeholder="Bình luận..." rows="2" style="width: 100%; margin-top: 5px;"></textarea><br/>
-            <input id="review-rating" type="number" min="1" max="5" placeholder="Rating từ 1 đến 5" style="width: 100%; margin-top: 5px;" /><br/>
-            <button id="submit-review" style="margin-top: 5px;">Gửi</button>
-        </div>
-    `;
-
-    const popup = new mapboxgl.Popup({ offset: 25 })
-        .setLngLat([place.longitude, place.latitude])
-        .setHTML(formHtml)
-        .addTo(map.current);
-
-    setTimeout(() => {
-        document.getElementById("submit-review").onclick = async () => {
-            const comment = document.getElementById("review-comment").value;
-            const rating = parseFloat(document.getElementById("review-rating").value);
-
-            if (!comment || !rating || rating < 1 || rating > 5) {
-                alert("Vui lòng nhập bình luận và rating hợp lệ (1-5).");
-                return;
-            }
-
-            try {
-                const res = await fetch(`http://localhost:8080/api/restaurant/${place.id}/review`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${user.token}`, // nếu backend cần token
-                    },
-                    body: JSON.stringify({ comment, rating }),
-                });
-
-                if (!res.ok) throw new Error("Lỗi gửi đánh giá");
-
-                const newAvgRating = await res.text();
-
-                popup.setHTML(`
-                    <div style="font-size: 14px; padding: 6px 10px;">
-                        Cảm ơn bạn đã đánh giá!<br/>
-                        ⭐ Rating mới: <strong>${newAvgRating}</strong>
-                    </div>
-                `);
-            } catch (err) {
-                console.error("Lỗi khi gửi đánh giá:", err);
-                alert("Đã có lỗi xảy ra.");
-            }
-        };
-    }, 0);
-}
 
 export default function DaNang() {
     const mapContainer = useRef(null);
     const map = useRef(null);
-    const popupRef = useRef(new mapboxgl.Popup({ closeButton: false, closeOnClick: false }));
     const vnMapRef = useRef(null);
     const daNangMapRef = useRef(null);
     const navigate = useNavigate();
     const restaurantLoaded = useRef(false);
+    const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
 
-    const showReviewForm = (place) => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user) return alert("Bạn cần đăng nhập để đánh giá.");
+    const center = [108.2022, 15.8544];
+    const zoom = 9;
 
-        const formHtml = `
-            <div style="font-size: 14px; padding: 6px 10px;">
-                <strong>Đánh giá ${place.name}</strong><br/>
-                <textarea id="review-comment" placeholder="Bình luận..." rows="2" style="width: 100%; margin-top: 5px;"></textarea><br/>
-                <input id="review-rating" type="number" min="1" max="5" placeholder="Rating từ 1 đến 5" style="width: 100%; margin-top: 5px;" /><br/>
-                <button id="submit-review" style="margin-top: 5px;">Gửi</button>
-            </div>`;
-
-        const popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false,
-            offset: 25,
-        }).setHTML("").addTo(map.current);
-
-        let isHoveringPopup = false;
-        let popupTimeout;
-
-        data.forEach((place) => {
-            const marker = new mapboxgl.Marker({ color: '#ff6347' })
-                .setLngLat([place.longitude, place.latitude])
-                .addTo(map.current);
-
-            const popupHtml = `
-        <div class="custom-popup" style="font-size: 14px; padding: 6px 10px;">
-            <strong>${place.name}</strong><br/>
-            <span id="avg-rating-${place.id}">Loading...</span>
-        </div>
-    `;
-
-            const element = marker.getElement();
-
-            element.addEventListener("mouseenter", async () => {
-                clearTimeout(popupTimeout);
-
-                try {
-                    const res = await fetch(`http://localhost:8080/api/restaurant/${place.id}/review`);
-                    const avgRating = await res.text();
-
-                    popup.setLngLat([place.longitude, place.latitude])
-                        .setHTML(`
-                    <div class="custom-popup" style="font-size: 14px; padding: 6px 10px;">
-                        <strong>${place.name}</strong><br/>
-                        ⭐ Rating trung bình: <strong>${avgRating}</strong>
-                    </div>
-                `)
-                        .addTo(map.current);
-
-                    setTimeout(() => {
-                        const popupEl = document.querySelector('.mapboxgl-popup-content');
-                        if (popupEl) {
-                            popupEl.addEventListener('mouseenter', () => isHoveringPopup = true);
-                            popupEl.addEventListener('mouseleave', () => {
-                                isHoveringPopup = false;
-                                popup.remove();
-                            });
-                        }
-                    }, 0);
-
-                } catch (err) {
-                    console.error("Lỗi khi lấy rating trung bình:", err);
-                }
-            });
-
-            element.addEventListener("mouseleave", () => {
-                popupTimeout = setTimeout(() => {
-                    if (!isHoveringPopup) {
-                        popup.remove();
-                    }
-                }, 300);
-            });
-
-            map.current.restaurantMarkers.push(marker);
-        });
+    const clearMarkers = () => {
+        if (map.current.restaurantMarkers) {
+            map.current.restaurantMarkers.forEach(marker => marker.remove());
+            map.current.restaurantMarkers = [];
+        }
     };
 
     const loadRestaurants = async () => {
         try {
-            const res = await fetch("http://localhost:8080/api/city/3");
+            const res = await fetch("http://localhost:8080/api/city/1");
             const data = await res.json();
-
-            if (map.current.restaurantMarkers) {
-                map.current.restaurantMarkers.forEach(marker => marker.remove());
-            }
-            map.current.restaurantMarkers = [];
-
-            const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 25 });
-
-            data.forEach((place) => {
-                const marker = new mapboxgl.Marker({ color: '#ff6347' })
-                    .setLngLat([place.longitude, place.latitude])
-                    .addTo(map.current);
-
-                const markerEl = marker.getElement();
-
-                markerEl.addEventListener("mouseenter", async () => {
-                    try {
-                        const res = await fetch(`http://localhost:8080/api/restaurant/${place.id}/review`);
-                        const avgRating = await res.text();
-
-                        popup.setLngLat([place.longitude, place.latitude])
-                            .setHTML(`
-                                <div style="font-size: 14px; padding: 6px 10px;">
-                                    <strong>${place.name}</strong><br/>
-                                    ⭐ Rating trung bình: <strong>${avgRating}</strong><br/>
-                                    <button id="review-btn" style="margin-top: 5px; font-size: 12px;">Viết đánh giá</button>
-                                </div>`)
-                            .addTo(map.current);
-
-                        setTimeout(() => {
-                            const btn = document.getElementById("review-btn");
-                            if (btn) btn.onclick = () => showReviewForm(place);
-                        }, 0);
-                    } catch (err) {
-                        console.error("Lỗi khi lấy rating trung bình:", err);
-                    }
-                });
-
-                markerEl.addEventListener("mouseleave", () => popup.remove());
-                map.current.restaurantMarkers.push(marker);
-            });
-
+            renderMarkers(data);
             restaurantLoaded.current = true;
         } catch (err) {
             console.error("Lỗi tải nhà hàng:", err);
         }
     };
 
-    const center = [108.2022, 15.8544];
-    const zoom = 9;
+    const renderMarkers = (data) => {
+        clearMarkers();
 
-    // Tính diện tích polygon
-    function getPolygonArea(coords) {
+        const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 25 });
+
+        data.forEach((place) => {
+            const marker = new mapboxgl.Marker({ color: '#ff6347' })
+                .setLngLat([place.longitude, place.latitude])
+                .addTo(map.current);
+
+            const markerEl = marker.getElement();
+
+            markerEl.addEventListener("mouseenter", () => {
+                popup.setLngLat([place.longitude, place.latitude])
+                    .setHTML(`<div style="font-size: 14px; padding: 6px 10px;"><strong>${place.name}</strong></div>`)
+                    .addTo(map.current);
+            });
+
+            markerEl.addEventListener("mouseleave", () => popup.remove());
+
+            markerEl.addEventListener("click", async () => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/restaurants/${place.id}`);
+                    const data = await res.json();
+                    setSelectedRestaurant(data);
+
+                    if (map.current.getLayer("da-nang-border")) {
+                        map.current.removeLayer("da-nang-border");
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi lấy chi tiết nhà hàng:", err);
+                }
+            });
+
+            map.current.restaurantMarkers.push(marker);
+        });
+    };
+
+    const getPolygonArea = (coords) => {
         let area = 0;
         for (let i = 0; i < coords.length - 1; i++) {
             const [x1, y1] = coords[i];
@@ -217,19 +84,17 @@ export default function DaNang() {
             area += x1 * y2 - x2 * y1;
         }
         return Math.abs(area / 2);
-    }
+    };
 
-    // Tính centroid đơn giản
-    function centroid(coords) {
+    const centroid = (coords) => {
         let x = 0, y = 0;
         coords.forEach(([lng, lat]) => {
             x += lng;
             y += lat;
         });
         return [x / coords.length, y / coords.length];
-    }
+    };
 
-    // Tạo label 1 lần duy nhất cho mỗi quận
     const createLabelFeatures = (geojson) => {
         const labelMap = {};
 
@@ -270,9 +135,7 @@ export default function DaNang() {
                     type: "Point",
                     coordinates,
                 },
-                properties: {
-                    name,
-                },
+                properties: { name },
             })),
         };
     };
@@ -287,7 +150,6 @@ export default function DaNang() {
     };
 
     const loadLayers = async () => {
-        // 1. Load VN-MAP.json và lọc bỏ Đà Nẵng
         if (!vnMapRef.current) {
             const res = await fetch("/data/VN-MAP.json");
             const fullVNMap = await res.json();
@@ -314,7 +176,6 @@ export default function DaNang() {
             },
         });
 
-        // 2. Load DA_NANG_MAP.json
         if (!daNangMapRef.current) {
             const res = await fetch("/data/DA_NANG_MAP.json");
             daNangMapRef.current = await res.json();
@@ -345,7 +206,6 @@ export default function DaNang() {
             },
         });
 
-        // 3. Tạo label 1 lần duy nhất cho mỗi quận
         const labelGeoJSON = createLabelFeatures(daNangMapRef.current);
         map.current.addSource("da-nang-labels", {
             type: "geojson",
@@ -370,119 +230,13 @@ export default function DaNang() {
                 "text-halo-width": 1.2,
             },
         });
-
-        // 4. Hover popup
-        map.current.on("mousemove", "restaurant-points", async (e) => {
-            const restaurant = e.features[0];
-            const { id, name } = restaurant.properties;
-            const [lng, lat] = restaurant.geometry.coordinates;
-
-            try {
-                const res = await fetch(`http://localhost:8080/api/restaurant/${id}/review`);
-                const avgRating = await res.text();
-
-                popupRef.current
-                    .setLngLat([lng, lat])
-                    .setOffset([0, -15])
-                    .setHTML(`
-                <div style="font-size: 14px; padding: 6px 10px;">
-                    <strong>${name}</strong><br/>
-                    ⭐ Rating trung bình: <strong>${avgRating}</strong>
-                </div>
-            `)
-                    .addTo(map.current);
-            } catch (err) {
-                console.error("Lỗi khi lấy rating trung bình:", err);
-            }
-        });
-
-        map.current.on("mouseleave", "restaurant-points", () => {
-            popupRef.current.remove();
-        });
-
-        // 5. Tô xám các nước khác
-        map.current.addSource("country-boundaries", {
-            type: "vector",
-            url: "mapbox://mapbox.country-boundaries-v1",
-        });
-
-        map.current.addLayer({
-            id: "gray-other-countries",
-            type: "fill",
-            source: "country-boundaries",
-            "source-layer": "country_boundaries",
-            filter: ["!=", ["get", "iso_3166_1_alpha_3"], "VNM"],
-            paint: {
-                "fill-color": "#cccccc",
-                "fill-opacity": 0.8,
-            },
-        });
-
-        // 6. Zoom control
-        map.current.on("zoom", () => {
-            const z = map.current.getZoom();
-            const center = map.current.getCenter();
-            if (z <= 8) {
-                localStorage.setItem("mapZoom", z);
-                localStorage.setItem("mapCenter", JSON.stringify([center.lng, center.lat]));
-                navigate("/");
-                return;
-            }
-
-            if (map.current.getLayer("da-nang-district-labels")) {
-                map.current.setLayoutProperty(
-                    "da-nang-district-labels",
-                    "visibility",
-                    z < 11 ? "visible" : "none"
-                );
-            }
-
-            if (z >= 11 && !restaurantLoaded.current) {
-                loadRestaurants();
-            }
-
-            if (z < 11 && restaurantLoaded.current) {
-                if (map.current.restaurantMarkers) {
-                    map.current.restaurantMarkers.forEach(m => m.remove());
-                    map.current.restaurantMarkers = [];
-                }
-                restaurantLoaded.current = false;
-            }
-
-            const hasBorder = map.current.getLayer("da-nang-border");
-            if (z >= 11 && hasBorder) {
-                map.current.removeLayer("da-nang-border");
-            } else if (z < 11 && !hasBorder && map.current.getSource("da-nang")) {
-                map.current.addLayer({
-                    id: "da-nang-border",
-                    type: "line",
-                    source: "da-nang",
-                    paint: {
-                        "line-color": "#da5c32",
-                        "line-width": 2,
-                    },
-                });
-            }
-            const layers = map.current.getStyle().layers;
-            layers.forEach((layer) => {
-                if (
-                    layer.type === "symbol" &&
-                    layer.id !== "da-nang-district-labels"
-                ) {
-                    map.current.setLayoutProperty(
-                        layer.id,
-                        "visibility",
-                        z >= 11 ? "visible" : "none"
-                    );
-                }
-            });
-        });
     };
 
     useEffect(() => {
         if (map.current) return;
-        const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || 9;
-        const savedCenter = JSON.parse(localStorage.getItem("mapCenter")) || [108.2022, 15.8544];
+
+        const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || zoom;
+        const savedCenter = JSON.parse(localStorage.getItem("mapCenter")) || center;
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
@@ -493,14 +247,82 @@ export default function DaNang() {
             maxZoom: 15,
         });
 
-        localStorage.removeItem("mapZoom");
-        localStorage.removeItem("mapCenter");
+        map.current.restaurantMarkers = [];
 
         map.current.on("load", async () => {
             hideDefaultLabels();
             await loadLayers();
         });
+
+        map.current.on("zoom", () => {
+            const z = map.current.getZoom();
+            const centerNow = map.current.getCenter();
+
+            if (z <= 8) {
+                localStorage.setItem("mapZoom", z);
+                localStorage.setItem("mapCenter", JSON.stringify([centerNow.lng, centerNow.lat]));
+                navigate("/");
+                return;
+            }
+
+            if (z >= 11 && !restaurantLoaded.current && !isSearching) {
+                loadRestaurants();
+                if (map.current.getLayer("da-nang-border")) {
+                    map.current.removeLayer("da-nang-border");
+                }
+            }
+
+            if (z < 11 && restaurantLoaded.current) {
+                clearMarkers();
+                restaurantLoaded.current = false;
+                setSelectedRestaurant(null);
+
+                if (!map.current.getLayer("da-nang-border") && map.current.getSource("da-nang")) {
+                    map.current.addLayer({
+                        id: "da-nang-border",
+                        type: "line",
+                        source: "da-nang",
+                        paint: {
+                            "line-color": "#da5c32",
+                            "line-width": 2,
+                        },
+                    });
+                }
+            }
+        });
     }, []);
 
-    return <div ref={mapContainer} style={{ height: "100vh", width: "100vw" }} />;
+    return (
+        <div style={{ position: "relative", height: "100vh", width: "100vw" }}>
+            <div ref={mapContainer} style={{ height: "100%", width: "100%", position: "absolute", zIndex: 1 }} />
+
+            <SearchBar
+                onSearchResults={(results) => {
+                    setIsSearching(true);
+                    renderMarkers(results);
+                }}
+                onClearSearch={() => {
+                    setIsSearching(false);
+                    loadRestaurants();
+                }}
+                sidebarOpen={true}
+                sidebarWidth={600}
+                authWidth={200}
+            />
+
+            {selectedRestaurant && (
+                <div style={{ position: "absolute", top: 0, right: 0, zIndex: 10 }}>
+                    <RestaurantDetails
+                        restaurant={selectedRestaurant}
+                        onClose={() => setSelectedRestaurant(null)}
+                        onRatingUpdate={(updatedAvgRating) => {
+                            setSelectedRestaurant((prev) =>
+                                prev ? { ...prev, rating: updatedAvgRating } : null
+                            );
+                        }}
+                    />
+                </div>
+            )}
+        </div>
+    );
 }

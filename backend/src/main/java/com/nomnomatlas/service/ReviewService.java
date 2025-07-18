@@ -37,6 +37,7 @@ public class ReviewService {
         // Cập nhật lại AVG rating
         Double avg = reviewRepository.getAverageRatingByRestaurant(restaurantId);
         restaurantEntity.setRating(avg);
+        reviewRepository.save(reviewEntity);
         return avg;
     }
 }

@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import SearchBar from "./SearchBar";
 import AuthButtons from "./AuthButtons";
+import Sidebar from "./Sidebar";
+
+// Tùy chọn: quản lý zIndex rõ ràng hơn
+const Z_INDEX = {
+    SIDEBAR: 1000,
+    AUTH_BUTTON: 1100,
+    MAP_CONTENT: 1,
+};
 
 export default function MainLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -30,21 +36,14 @@ export default function MainLayout() {
             {!isLoginPage && !isSignUpPage && (
                 <>
                     <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-                    <div style={{ zIndex: 1100 }}>
+                    <div style={{ zIndex: Z_INDEX.AUTH_BUTTON }}>
                         <AuthButtons ref={authRef} />
                     </div>
                 </>
             )}
 
-            {isDaNangPage && (
-                <SearchBar
-                    sidebarOpen={isSidebarOpen}
-                    sidebarWidth={600}
-                    authWidth={authWidth}
-                />
-            )}
 
-            <div className="position-relative" style={{ zIndex: 1 }}>
+            <div className="position-relative" style={{ zIndex: Z_INDEX.MAP_CONTENT }}>
                 <Outlet />
             </div>
         </div>

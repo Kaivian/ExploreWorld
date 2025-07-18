@@ -1,6 +1,6 @@
-import { forwardRef, useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { forwardRef, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthButtons = forwardRef((_, ref) => {
     const navigate = useNavigate();
@@ -44,11 +44,7 @@ const AuthButtons = forwardRef((_, ref) => {
     }, [showDropdown]);
 
     const handleAvatarClick = () => {
-        if (user) {
-            navigate("/profile");
-        } else {
-            setShowDropdown((prev) => !prev);
-        }
+        setShowDropdown((prev) => !prev);
     };
 
     const handleRedirect = (path) => {
@@ -83,7 +79,7 @@ const AuthButtons = forwardRef((_, ref) => {
                 className="position-fixed top-0 end-0"
                 style={{ paddingTop: "8px", paddingRight: "8px", zIndex: 1050 }}
             >
-                {user || isSmallScreen ? (
+                {(user || isSmallScreen) && (
                     <div className="position-relative" ref={dropdownRef}>
                         <div
                             className="bg-white d-flex align-items-center justify-content-center"
@@ -98,7 +94,7 @@ const AuthButtons = forwardRef((_, ref) => {
                             <i className="fa-regular fa-circle-user" style={{ fontSize: "24px" }} />
                         </div>
 
-                        {!user && shouldRender && (
+                        {shouldRender && (
                             <div
                                 className={`dropdown-menu mt-2 shadow-sm ${showDropdown ? "fade-in" : "fade-out"}`}
                                 style={{
@@ -113,43 +109,59 @@ const AuthButtons = forwardRef((_, ref) => {
                                     zIndex: 1060,
                                 }}
                             >
-                                <button
-                                    className="dropdown-item text-center btn btn-link p-1 m-0 border-0"
-                                    style={{
-                                        textDecoration: hovered === "signup" ? "underline" : "none",
-                                        color: hovered === "signup" ? "#afafafff" : "#212529",
-                                    }}
-                                    onMouseEnter={() => setHovered("signup")}
-                                    onMouseLeave={() => setHovered(null)}
-                                    onClick={() => {
-                                        sessionStorage.setItem("postLoginRedirect", window.location.pathname);
-                                        setShowDropdown(false);
-                                        navigate("/sign-up");
-                                    }}
-                                >
-                                    Sign up
-                                </button>
-                                <div style={{ height: "2px", backgroundColor: "#bebebe", margin: "4px 0" }} />
-                                <button
-                                    className="dropdown-item text-center btn btn-link fw-semibold p-1 m-0 border-0"
-                                    style={{
-                                        textDecoration: hovered === "login" ? "underline" : "none",
-                                        color: hovered === "login" ? "#afafafff" : "#212529",
-                                    }}
-                                    onMouseEnter={() => setHovered("login")}
-                                    onMouseLeave={() => setHovered(null)}
-                                    onClick={() => {
-                                        sessionStorage.setItem("postLoginRedirect", window.location.pathname);
-                                        setShowDropdown(false);
-                                        navigate("/login");
-                                    }}
-                                >
-                                    Log in
-                                </button>
+                                {!user ? (
+                                    <>
+                                        <button
+                                            className="dropdown-item text-center btn btn-link p-1 m-0 border-0"
+                                            style={{
+                                                textDecoration: hovered === "signup" ? "underline" : "none",
+                                                color: hovered === "signup" ? "#afafafff" : "#212529",
+                                            }}
+                                            onMouseEnter={() => setHovered("signup")}
+                                            onMouseLeave={() => setHovered(null)}
+                                            onClick={() => handleRedirect("/sign-up")}
+                                        >
+                                            Sign up
+                                        </button>
+                                        <div style={{ height: "2px", backgroundColor: "#bebebe", margin: "4px 0" }} />
+                                        <button
+                                            className="dropdown-item text-center btn btn-link fw-semibold p-1 m-0 border-0"
+                                            style={{
+                                                textDecoration: hovered === "login" ? "underline" : "none",
+                                                color: hovered === "login" ? "#afafafff" : "#212529",
+                                            }}
+                                            onMouseEnter={() => setHovered("login")}
+                                            onMouseLeave={() => setHovered(null)}
+                                            onClick={() => handleRedirect("/login")}
+                                        >
+                                            Log in
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="dropdown-item text-center text-muted" style={{ fontSize: "14px" }}>
+                                            👋 {user.username}
+                                        </span>
+                                        <div style={{ height: "2px", backgroundColor: "#bebebe", margin: "4px 0" }} />
+                                        <button
+                                            className="dropdown-item text-center btn btn-link text-danger fw-semibold p-1 m-0 border-0"
+                                            onClick={() => {
+                                                localStorage.removeItem("accessToken");
+                                                localStorage.removeItem("user");
+                                                setShowDropdown(false);
+                                                navigate("/login");
+                                            }}
+                                        >
+                                            Logout
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
-                ) : (
+                )}
+
+                {!user && !isSmallScreen && (
                     <div
                         className="d-flex align-items-center bg-white shadow-sm rounded-pill"
                         style={{ height: "38px", padding: "0 14px", gap: "12px" }}

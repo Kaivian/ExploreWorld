@@ -1,0 +1,219 @@
+/* ======= CARD CONTAINER ======= */
+.restaurant-detail-card {
+    position: absolute;
+    top: 12px;
+    right: 72px;
+    width: 420px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 24px;
+    z-index: 9999;
+    font-family: 'Segoe UI', sans-serif;
+    border-left: 6px solid #2cb67d;
+}
+
+/* ======= HEADER ======= */
+.restaurant-detail-card h2 {
+    margin-top: 0;
+    color: #222;
+    font-size: 22px;
+}
+
+.restaurant-detail-card p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: #444;
+}
+
+/* ======= IMAGES ======= */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.image-gallery img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* ======= MAIN RATING ======= */
+.rating {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    gap: 6px;
+}
+
+.rating-number {
+    color: #666;
+    font-size: 13px;
+}
+
+.main-stars-outer {
+    position: relative;
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    color: #ccc;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.main-stars-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    color: gold;
+    width: 0;
+}
+
+.main-stars-outer::before {
+    content: "★★★★★";
+}
+
+.main-stars-inner::before {
+    content: "★★★★★";
+}
+
+/* ======= REVIEW STARS ======= */
+.review-stars-outer {
+    position: relative;
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    color: #ccc;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.review-stars-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    color: gold;
+    width: 0;
+}
+
+.review-stars-outer::before {
+    content: "★★★★★";
+}
+
+.review-stars-inner::before {
+    content: "★★★★★";
+}
+
+/* ======= REVIEWS ======= */
+.reviews {
+    margin-top: 18px;
+}
+
+.review-card {
+    margin-bottom: 12px;
+    padding: 10px;
+    border: 1px solid #e2e2e2;
+    border-radius: 6px;
+    background-color: #f7f7f7;
+}
+
+.review-comment {
+    font-style: italic;
+    color: #333;
+    margin: 4px 0;
+}
+
+.review-stars {
+    margin-top: 4px;
+}
+
+/* ======= CLOSE BUTTON ======= */
+.close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 18px;
+    border: none;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+/* ======= REVIEW FORM ======= */
+.review-form {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px dashed #ccc;
+}
+
+.review-form h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #222;
+}
+
+.review-form textarea {
+    resize: vertical;
+    min-height: 70px;
+    font-size: 14px;
+    padding: 8px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 8px;
+}
+
+.rating-select {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-select label {
+    margin-right: 6px;
+    font-weight: bold;
+}
+
+.rating-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.rating-btn.selected {
+    color: gold;
+}
+
+.rating-btn:hover {
+    color: #f4c150;
+}
+
+.submit-btn {
+    background-color: #2cb67d;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.submit-btn:hover {
+    background-color: #259e6b;
+}

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 export default function SearchBar({ sidebarOpen, sidebarWidth, authWidth }) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -13,13 +15,6 @@ export default function SearchBar({ sidebarOpen, sidebarWidth, authWidth }) {
   const MIN_WIDTH = 200;
   const MAX_WIDTH = 600;
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Tính toán vị trí và kích thước
   const leftOffset = sidebarOpen ? sidebarWidth + GAP : 0;
   const rightOffset = authWidth + GAP;
   const availableWidth = windowWidth - leftOffset - rightOffset;
@@ -36,12 +31,44 @@ export default function SearchBar({ sidebarOpen, sidebarWidth, authWidth }) {
     transition: "all 0.3s ease",
   };
 
+  // Debounce logic
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (query.trim()) {
+        performSearch(query);
+      } else {
+        setResults([]);
+      }
+    }, 500); // delay 500ms
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const performSearch = async (text) => {
+    const url = new URL("http://localhost:8080/api/restaurants/search");
+
+    // Add dish query param
+    url.searchParams.append("dish", text);
+
+    try {
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setResults(data);
+      console.log("Search results:", data); // replace this with your render logic
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+  };
+
   return (
     <div style={containerStyle}>
       <input
         type="text"
         className="form-control shadow-sm"
-        placeholder="Search..."
+        placeholder="Search dishes, category, open/close time..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
         style={{
           height: "40px",
           borderRadius: "999px",

@@ -30,15 +30,22 @@ public class RestaurantController {
         return restaurantService.getRestaurantById(id);
     }
 
+//    @GetMapping(value="/api/restaurants/search")
+//    public List<RestaurantsResponseDTO> searchRestaurants(
+//            @RequestParam(required = false) List<String> dish,
+//            @RequestParam(required = false) String category,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime openTime,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime closeTime
+//    ){
+//        return restaurantSearchService.searchRestaurants(dish, category, openTime, closeTime);
+//    }
+
     @Autowired
     private RestaurantSearchService restaurantSearchService;
+
     @GetMapping(value="/api/restaurants/search")
-    public List<RestaurantsResponseDTO> searchRestaurants(
-            @RequestParam(required = false) List<String> dish,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime openTime,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime closeTime
-    ){
-        return restaurantSearchService.searchRestaurants(dish, category, openTime, closeTime);
+    public List<RestaurantsResponseDTO> searchRestaurantsByDishName(
+            @RequestParam(value="dishName") String dishName){
+        return restaurantSearchService.searchRestaurantByNameDish(dishName);
     }
 }

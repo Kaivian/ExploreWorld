@@ -21,18 +21,19 @@ public class RestaurantSearchService {
 
     public List<RestaurantsResponseDTO> searchRestaurants(
             List<String> dishes, String categoryName, LocalTime openTime, LocalTime closeTime){
-
-        // Thay đổi 3: Tạo đối tượng Specification từ các tham số đầu vào
         Specification<RestaurantEntity> spec = RestaurantSpecification.search(categoryName, openTime, closeTime, dishes);
-
-        // Thay đổi 4: Gọi phương thức findAll(spec) thay vì câu query cũ
         List<RestaurantEntity> restaurantEntityList = restaurantRepository.findAll(spec);
-
         return restaurantEntityList
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
 
+    public List<RestaurantsResponseDTO> searchRestaurantByNameDish(String name){
+        return restaurantRepository.findByDishName(name)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public RestaurantsResponseDTO mapToDTO(RestaurantEntity entity){
@@ -43,5 +44,4 @@ public class RestaurantSearchService {
         dto.setLongitude(entity.getLongitude());
         return dto;
     }
-
 }

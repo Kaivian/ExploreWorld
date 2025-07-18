@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { forwardRef, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-export default function AuthButtons() {
+const AuthButtons = forwardRef((_, ref) => {
     const navigate = useNavigate();
     const [user, setUser] = useState(() => {
         const stored = localStorage.getItem("user");
@@ -55,57 +55,41 @@ export default function AuthButtons() {
         <>
             <style>
                 {`
-            .fade-in {
-                animation: dropdown-fade-in 200ms ease-out forwards;
-            }
-            .fade-out {
-                animation: dropdown-fade-out 200ms ease-in forwards;
-            }
-            @keyframes dropdown-fade-in {
-                from {
-                    opacity: 0;
-                    transform: translateY(-8px);
+                .fade-in {
+                    animation: dropdown-fade-in 200ms ease-out forwards;
                 }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
+                .fade-out {
+                    animation: dropdown-fade-out 200ms ease-in forwards;
                 }
-            }
-            @keyframes dropdown-fade-out {
-                from {
-                    opacity: 1;
-                    transform: translateY(0);
+                @keyframes dropdown-fade-in {
+                    from { opacity: 0; transform: translateY(-8px); }
+                    to   { opacity: 1; transform: translateY(0); }
                 }
-                to {
-                    opacity: 0;
-                    transform: translateY(-8px);
+                @keyframes dropdown-fade-out {
+                    from { opacity: 1; transform: translateY(0); }
+                    to   { opacity: 0; transform: translateY(-8px); }
                 }
-            }
-        `}
+                `}
             </style>
 
             <div
+                ref={ref}
                 className="position-fixed top-0 end-0"
-                style={{ paddingTop: "8px", paddingRight: "16px", zIndex: 1050 }}
+                style={{ paddingTop: "8px", paddingRight: "8px", zIndex: 1050 }}
             >
                 {user || isSmallScreen ? (
                     <div className="position-relative" ref={dropdownRef}>
                         <div
-                            className="bg-white rounded-circle d-flex align-items-center justify-content-center"
+                            className="bg-white d-flex align-items-center justify-content-center"
                             style={{
-                                width: "38px",
-                                height: "38px",
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "0.375rem",
                                 cursor: "pointer",
                             }}
                             onClick={handleAvatarClick}
                         >
-                            <i
-                                className="fa-regular fa-circle-user"
-                                style={{
-                                    fontSize: "24px",
-                                    color: "#212529",
-                                }}
-                            />
+                            <i className="fa-regular fa-circle-user" style={{ fontSize: "24px" }} />
                         </div>
 
                         {!user && shouldRender && (
@@ -126,12 +110,8 @@ export default function AuthButtons() {
                                 <button
                                     className="dropdown-item text-center btn btn-link p-1 m-0 border-0"
                                     style={{
-                                        background: "none",
-                                        border: "none",
-                                        width: "100%",
-                                        color: hovered === "signup" ? "#afafafff" : "#212529",
                                         textDecoration: hovered === "signup" ? "underline" : "none",
-                                        fontSize: "16px",
+                                        color: hovered === "signup" ? "#afafafff" : "#212529",
                                     }}
                                     onMouseEnter={() => setHovered("signup")}
                                     onMouseLeave={() => setHovered(null)}
@@ -146,12 +126,8 @@ export default function AuthButtons() {
                                 <button
                                     className="dropdown-item text-center btn btn-link fw-semibold p-1 m-0 border-0"
                                     style={{
-                                        background: "none",
-                                        border: "none",
-                                        width: "100%",
-                                        color: hovered === "login" ? "#afafafff" : "#212529",
                                         textDecoration: hovered === "login" ? "underline" : "none",
-                                        fontSize: "16px",
+                                        color: hovered === "login" ? "#afafafff" : "#212529",
                                     }}
                                     onMouseEnter={() => setHovered("login")}
                                     onMouseLeave={() => setHovered(null)}
@@ -168,49 +144,32 @@ export default function AuthButtons() {
                 ) : (
                     <div
                         className="d-flex align-items-center bg-white shadow-sm rounded-pill"
-                        style={{
-                            height: "38px",
-                            paddingLeft: "14px",
-                            paddingRight: "14px",
-                            gap: "12px",
-                            fontSize: "16px",
-                            lineHeight: "2",
-                        }}
+                        style={{ height: "38px", padding: "0 14px", gap: "12px" }}
                     >
                         <button
                             className="btn btn-link p-0 m-0 border-0"
                             style={{
                                 textDecoration: hovered === "signup" ? "underline" : "none",
-                                fontSize: "16px",
                                 color: hovered === "signup" ? "#afafafff" : "#212529",
-                                transition: "color 0.2s ease",
                             }}
                             onMouseEnter={() => setHovered("signup")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => {
-                                sessionStorage.setItem("postLoginRedirect", window.location.pathname);
-                                navigate("/sign-up");
-                            }}
+                            onClick={() => navigate("/sign-up")}
                         >
                             Sign up
                         </button>
 
-                        <div className="vr align-self-stretch" style={{ height: "100%" }} />
+                        <div className="vr align-self-stretch" />
 
                         <button
                             className="btn btn-link fw-semibold p-0 m-0 border-0"
                             style={{
                                 textDecoration: hovered === "login" ? "underline" : "none",
-                                fontSize: "16px",
                                 color: hovered === "login" ? "#afafafff" : "#212529",
-                                transition: "color 0.2s ease",
                             }}
                             onMouseEnter={() => setHovered("login")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => {
-                                sessionStorage.setItem("postLoginRedirect", window.location.pathname);
-                                navigate("/login");
-                            }}
+                            onClick={() => navigate("/login")}
                         >
                             Log in
                         </button>
@@ -219,4 +178,6 @@ export default function AuthButtons() {
             </div>
         </>
     );
-}
+});
+
+export default AuthButtons;

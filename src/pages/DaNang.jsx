@@ -12,6 +12,65 @@ export default function DaNang() {
     const vnMapRef = useRef(null);
     const daNangMapRef = useRef(null);
     const navigate = useNavigate();
+    const restaurantLoaded = useRef(false);
+
+    const loadRestaurants = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/api/city/3");
+            const data = await res.json();
+
+            const geojson = {
+                type: "FeatureCollection",
+                features: data.map((place) => ({
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [place.longitude, place.latitude],
+                    },
+                    properties: {
+                        name: place.name,
+                    },
+                })),
+            };
+
+            map.current.addSource("restaurants", {
+                type: "geojson",
+                data: geojson,
+            });
+
+            map.current.addLayer({
+                id: "restaurant-points",
+                type: "circle",
+                source: "restaurants",
+                paint: {
+                    "circle-radius": 6,
+                    "circle-color": "#ff6347",
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": "#ffffff",
+                },
+            });
+
+            map.current.addLayer({
+                id: "restaurant-labels",
+                type: "symbol",
+                source: "restaurants",
+                layout: {
+                    "text-field": ["get", "name"],
+                    "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                    "text-size": 12,
+                    "text-offset": [0, 1.2],
+                    "text-anchor": "top",
+                },
+                paint: {
+                    "text-color": "#000000",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 1,
+                },
+            });
+        } catch (err) {
+            console.error("Lỗi tải nhà hàng:", err);
+        }
+    };
 
     const center = [108.2022, 15.8544];
     const zoom = 9;
@@ -238,8 +297,9 @@ export default function DaNang() {
             }
 
             const hasBorder = map.current.getLayer("da-nang-border");
-            if (z >= 11 && hasBorder) {
-                map.current.removeLayer("da-nang-border");
+            if (z >= 11 && !restaurantLoaded.current) {
+                restaurantLoaded.current = true;
+                loadRestaurants();
             } else if (z < 11 && !hasBorder && map.current.getSource("da-nang")) {
                 map.current.addLayer({
                     id: "da-nang-border",

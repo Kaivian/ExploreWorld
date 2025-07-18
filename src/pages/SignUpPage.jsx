@@ -42,9 +42,10 @@ function SignUpPage() {
                 localStorage.setItem('accessToken', data.accessToken);
             }
 
-            const redirectTo = sessionStorage.getItem('postLoginRedirect') || '/dashboard';
-            sessionStorage.removeItem('postLoginRedirect');
-            navigate(redirectTo);
+            const redirectTo = sessionStorage.getItem("postLoginRedirect") || "/";
+            sessionStorage.removeItem("postLoginRedirect");
+            navigate(redirectTo, { replace: true });
+
         } catch (err) {
             console.error('Signup error:', err);
             alert('Signup failed.');

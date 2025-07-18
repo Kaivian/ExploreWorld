@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const AuthButtons = forwardRef((_, ref) => {
@@ -49,6 +49,12 @@ const AuthButtons = forwardRef((_, ref) => {
         } else {
             setShowDropdown((prev) => !prev);
         }
+    };
+
+    const handleRedirect = (path) => {
+        sessionStorage.setItem("postLoginRedirect", window.location.pathname);
+        setShowDropdown(false);
+        navigate(path);
     };
 
     return (
@@ -116,8 +122,9 @@ const AuthButtons = forwardRef((_, ref) => {
                                     onMouseEnter={() => setHovered("signup")}
                                     onMouseLeave={() => setHovered(null)}
                                     onClick={() => {
+                                        sessionStorage.setItem("postLoginRedirect", window.location.pathname);
                                         setShowDropdown(false);
-                                        navigate("/signup");
+                                        navigate("/sign-up");
                                     }}
                                 >
                                     Sign up
@@ -132,6 +139,7 @@ const AuthButtons = forwardRef((_, ref) => {
                                     onMouseEnter={() => setHovered("login")}
                                     onMouseLeave={() => setHovered(null)}
                                     onClick={() => {
+                                        sessionStorage.setItem("postLoginRedirect", window.location.pathname);
                                         setShowDropdown(false);
                                         navigate("/login");
                                     }}
@@ -154,7 +162,7 @@ const AuthButtons = forwardRef((_, ref) => {
                             }}
                             onMouseEnter={() => setHovered("signup")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => navigate("/sign-up")}
+                            onClick={() => handleRedirect("/sign-up")}
                         >
                             Sign up
                         </button>
@@ -169,7 +177,7 @@ const AuthButtons = forwardRef((_, ref) => {
                             }}
                             onMouseEnter={() => setHovered("login")}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => navigate("/login")}
+                            onClick={() => handleRedirect("/login")}
                         >
                             Log in
                         </button>

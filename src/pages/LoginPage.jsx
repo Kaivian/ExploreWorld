@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function usePostLoginRedirect() {
+    const navigate = useNavigate();
     return () => {
-        const path = sessionStorage.getItem("postLoginRedirect") || "/dashboard";
+        const path = sessionStorage.getItem("postLoginRedirect") || "/";
         sessionStorage.removeItem("postLoginRedirect");
-        return path;
+        navigate(path);
     };
 }
 
@@ -17,6 +18,8 @@ function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+
+    const redirectToPostLogin = usePostLoginRedirect();
 
     const handleNormalLogin = async () => {
         try {
@@ -37,8 +40,7 @@ function LoginPage() {
                 localStorage.setItem('accessToken', data.accessToken);
             }
 
-            const getRedirectPath = usePostLoginRedirect();
-            navigate(getRedirectPath());
+            redirectToPostLogin();
         } catch (err) {
             console.error('Login error:', err);
             alert('Login failed. Please check your credentials.');
@@ -68,8 +70,8 @@ function LoginPage() {
                 localStorage.setItem('accessToken', data.accessToken);
             }
 
-            const getRedirectPath = usePostLoginRedirect();
-            navigate(getRedirectPath());
+            // ✅ Dùng lại hàm redirect
+            redirectToPostLogin();
         } catch (err) {
             console.error('Google login error:', err);
             alert('Google login failed.');

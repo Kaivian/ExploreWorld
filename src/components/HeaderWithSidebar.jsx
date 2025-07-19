@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function HeaderWithSidebar({
-    sidebarWidth = 600,
-    authWidth = 52,
+    onSearchResults,
+    onClearSearch,
 }) {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [dishList, setDishList] = useState([]);
-    const [selectedDish, setSelectedDish] = useState(null); // Dish selected for detail
+    const [selectedDish, setSelectedDish] = useState(null);
 
     // Fetch all dishes based on cityID
     useEffect(() => {
@@ -21,26 +20,32 @@ export default function HeaderWithSidebar({
             .catch((err) => console.error("Error loading city dishes:", err));
     }, []);
 
-    // Update window width
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Auto open sidebar when typing
     useEffect(() => {
-        if (query.trim()) setSidebarOpen(true);
+        if (query.trim()) {
+            setSidebarOpen(true);
+        }
     }, [query]);
 
-    // Filter dishes
     const filteredDishes = query.trim()
         ? dishList.filter(d =>
             d.name.toLowerCase().includes(query.trim().toLowerCase())
         )
         : [];
 
-    // Handle click dish => fetch detail
+    useEffect(() => {
+        if (query.trim() && filteredDishes.length > 0) {
+            onSearchResults?.(filteredDishes);
+        } else if (!query.trim()) {
+            onClearSearch?.();
+        }
+    }, [query, filteredDishes]);
+
     const handleDishClick = (dishId) => {
         fetch(`http://localhost:8080/api/dish/${dishId}`)
             .then((res) => res.json())
@@ -55,10 +60,6 @@ export default function HeaderWithSidebar({
         setSidebarOpen(!sidebarOpen);
         if (sidebarOpen) setSelectedDish(null);
     };
-
-    const GAP = 20;
-    const RIGHT_OFFSET = authWidth + GAP;
-    const searchBarWidth = sidebarOpen ? 400 : 600;
 
     const searchBarStyle = {
         position: "fixed",
@@ -94,7 +95,7 @@ export default function HeaderWithSidebar({
                 className="position-fixed top-0 start-0 h-100 border-end shadow"
                 style={{
                     backgroundColor: "#ffffff",
-                    width: sidebarWidth,
+                    width: 400,
                     zIndex: 1050,
                     transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
                     transition: "transform 0.3s ease-in-out",
@@ -117,6 +118,7 @@ export default function HeaderWithSidebar({
                                     alt={selectedDish.name}
                                     style={{
                                         width: "100%",
+                                        maxHeight: "200px",
                                         borderRadius: "8px",
                                         objectFit: "cover",
                                         marginBottom: "12px",
@@ -131,10 +133,10 @@ export default function HeaderWithSidebar({
                     <>
                         <h5>{query.trim() ? "Kết quả tìm kiếm" : "Gợi ý món ăn"}</h5>
                         <ul className="list-unstyled">
-                            {(query.trim() ? filteredDishes : dishList.slice(0, 5)).map((dish) => (
+                            {(query.trim() ? filteredDishes : dishList).map((dish) => (
                                 <li key={dish.id} className="py-2 border-bottom">
                                     <div
-                                        className="text-decoration-none d-flex align-items-center cursor-pointer"
+                                        className="d-flex align-items-center"
                                         style={{ cursor: "pointer" }}
                                         onClick={() => handleDishClick(dish.id)}
                                     >
@@ -142,10 +144,10 @@ export default function HeaderWithSidebar({
                                             src={dish.imageUrl}
                                             alt={dish.name}
                                             style={{
-                                                width: "48px",
-                                                height: "48px",
+                                                width: "36px",
+                                                height: "36px",
                                                 objectFit: "cover",
-                                                borderRadius: "8px",
+                                                borderRadius: "6px",
                                                 marginRight: "12px"
                                             }}
                                         />

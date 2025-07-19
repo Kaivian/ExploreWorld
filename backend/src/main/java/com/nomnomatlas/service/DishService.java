@@ -2,6 +2,7 @@ package com.nomnomatlas.service;
 
 import com.nomnomatlas.model.DishDTO;
 import com.nomnomatlas.model.DishImageDTO;
+import com.nomnomatlas.model.DishResponseDTO;
 import com.nomnomatlas.repository.DishRepository;
 import com.nomnomatlas.repository.entity.DishEntity;
 import com.nomnomatlas.repository.entity.DishImageEntity;
@@ -41,19 +42,14 @@ public class DishService {
         return dishDTO;
     }
 
-    public List<DishDTO> getDishByCityId(Integer cityId){
+    public List<DishResponseDTO> getDishByCityId(Integer cityId){
         List<DishEntity> dishEntityList = dishRepository.findAllByCityEntityId(cityId);
         return dishEntityList.stream().map(dishEntity -> {
-            DishDTO dishDTO = new DishDTO();
-            dishDTO.setId(dishEntity.getId());
-            dishDTO.setName(dishEntity.getName());
-            dishDTO.setVideoUrl(dishEntity.getVideoUrl());
-            dishDTO.setHasManualStory(dishEntity.getHasManualStory());
-            dishDTO.setFeature(dishEntity.getFeature());
-            dishDTO.setHistory(dishEntity.getHistory());
-            dishDTO.setCategoryName(dishEntity.getCategoryEntity().getName());
-            dishDTO.setCityName(dishEntity.getCityEntity().getName());
-            return dishDTO;
+            DishResponseDTO dishResponseDTO = new DishResponseDTO();
+            dishResponseDTO.setId(dishEntity.getId());
+            dishResponseDTO.setName(dishEntity.getName());
+            dishResponseDTO.setImage_url(dishEntity.getDishImageEntityList() != null ? dishEntity.getDishImageEntityList().get(0).getImageURL() : null);
+            return dishResponseDTO;
         }).collect(Collectors.toList());
     }
 

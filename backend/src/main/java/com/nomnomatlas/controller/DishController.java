@@ -1,6 +1,7 @@
 package com.nomnomatlas.controller;
 
 import com.nomnomatlas.model.DishDTO;
+import com.nomnomatlas.model.DishResponseDTO;
 import com.nomnomatlas.service.DishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,4 +20,11 @@ public class DishController {
     public DishDTO getDishById(@PathVariable Integer id){
         return dishService.getDishById(id);
     }
+
+    @GetMapping(value="/api/city/{cityId}/dishes")
+    public List<DishResponseDTO> getDishesByCityId(@PathVariable Integer cityId){
+        return dishService.getDishByCityId(cityId);
+    }
+
+
 }

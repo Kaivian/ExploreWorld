@@ -163,8 +163,14 @@ const AuthButtons = forwardRef((_, ref) => {
 
                 {!user && !isSmallScreen && (
                     <div
-                        className="d-flex align-items-center bg-white shadow-sm rounded-pill"
-                        style={{ height: "38px", padding: "0 14px", gap: "12px" }}
+                        className="d-flex align-items-center bg-white shadow-sm"
+                        style={{
+                            height: "40px",
+                            padding: "0 16px",
+                            gap: "16px",
+                            borderRadius: "10px",
+                            border: "1px solid #dee2e6",
+                        }}
                     >
                         <button
                             className="btn btn-link p-0 m-0 border-0"

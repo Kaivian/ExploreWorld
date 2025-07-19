@@ -7,6 +7,12 @@ npm install mapbox-gl
 
 npm install bootstrap bootstrap-icons
 
+npm install react-bootstrap-icons
+
+npm install react-bootstrap bootstrap
+
+npm install react-transition-group
+
 npm install @fortawesome/fontawesome-free @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome
 
 npm install @react-oauth/google jwt-decode

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import HeaderWithSidebar from "./HeaderWithSidebar";
 import AuthButtons from "./AuthButtons";
+import ChatBotIcon from "./ChatBotIcon";
 
 export default function MainLayout() {
     const [authWidth, setAuthWidth] = useState(0);
@@ -15,9 +16,12 @@ export default function MainLayout() {
     return (
         <div className="h-100 w-100 position-relative">
             {!isLoginPage && !isSignUpPage && (
-                <div style={{ zIndex: 1100 }}>
-                    <AuthButtons ref={authRef} />
-                </div>
+                <>
+                    <div style={{ zIndex: 1100 }}>
+                        <AuthButtons ref={authRef} />
+                    </div>
+                    <ChatBotIcon />
+                </>
             )}
 
             <div className="position-relative" style={{ zIndex: 1 }}>

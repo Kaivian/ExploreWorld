@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/restaurants/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/city/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dish/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/chat/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 2. Rất quan trọng: Cấu hình session management là STATELESS cho REST API dùng JWT

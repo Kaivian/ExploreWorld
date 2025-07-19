@@ -3,7 +3,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RestaurantDetails from "../components/RestaurantDetails";
-import SearchBar from "../components/SearchBar";
+import HeaderWithSidebar from "../components/HeaderWithSidebar";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -21,7 +21,7 @@ export default function DaNang() {
     const zoom = 9;
 
     const clearMarkers = () => {
-        if (map.current.restaurantMarkers) {
+        if (map.current?.restaurantMarkers) {
             map.current.restaurantMarkers.forEach(marker => marker.remove());
             map.current.restaurantMarkers = [];
         }
@@ -296,7 +296,7 @@ export default function DaNang() {
         <div style={{ position: "relative", height: "100vh", width: "100vw" }}>
             <div ref={mapContainer} style={{ height: "100%", width: "100%", position: "absolute", zIndex: 1 }} />
 
-            <SearchBar
+            <HeaderWithSidebar
                 onSearchResults={(results) => {
                     setIsSearching(true);
                     renderMarkers(results);
@@ -305,7 +305,6 @@ export default function DaNang() {
                     setIsSearching(false);
                     loadRestaurants();
                 }}
-                sidebarOpen={true}
                 sidebarWidth={600}
                 authWidth={200}
             />

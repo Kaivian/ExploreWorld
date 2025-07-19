@@ -42,13 +42,24 @@ public class DishService {
         return dishDTO;
     }
 
-    public List<DishResponseDTO> getDishByCityId(Integer cityId){
+    public List<DishResponseDTO> getDishByCityId(Integer cityId) {
         List<DishEntity> dishEntityList = dishRepository.findAllByCityEntityId(cityId);
         return dishEntityList.stream().map(dishEntity -> {
             DishResponseDTO dishResponseDTO = new DishResponseDTO();
             dishResponseDTO.setId(dishEntity.getId());
             dishResponseDTO.setName(dishEntity.getName());
-            dishResponseDTO.setImage_url(dishEntity.getDishImageEntityList() != null ? dishEntity.getDishImageEntityList().get(0).getImageURL() : null);
+
+            try {
+                List<DishImageEntity> images = dishEntity.getDishImageEntityList();
+                if (images != null && !images.isEmpty()) {
+                    dishResponseDTO.setImage_url(images.get(0).getImageURL());
+                } else {
+                    dishResponseDTO.setImage_url(null);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                dishResponseDTO.setImage_url(null);
+            }
+
             return dishResponseDTO;
         }).collect(Collectors.toList());
     }

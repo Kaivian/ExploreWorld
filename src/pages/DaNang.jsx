@@ -234,6 +234,7 @@ export default function DaNang() {
 
     useEffect(() => {
         sessionStorage.setItem("cityID", "1");
+        sessionStorage.setItem("city", "Đà Nẵng");
         if (map.current) return;
 
         const savedZoom = parseFloat(localStorage.getItem("mapZoom")) || zoom;

@@ -6,6 +6,7 @@ export default function ChatBotIcon() {
     const [animate, setAnimate] = useState(false);
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState([]);
+    const [city, setCity] = useState(() => sessionStorage.getItem("city") || "không rõ");
 
     const toggleChat = () => {
         if (!isOpen) setAnimate(true);
@@ -19,12 +20,32 @@ export default function ChatBotIcon() {
         }
     }, [isOpen]);
 
-    const handleSend = (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
-        setMessages((prev) => [...prev, { from: "user", text: input }]);
+
+        const userText = input;
+        const fullMessage = city && city !== "không rõ"
+            ? `Hiện tại tôi đang ở ${city}, và tôi muốn hỏi là ${userText}`
+            : userText;
+
+        setMessages((prev) => [...prev, { from: "user", text: userText }]);
         setInput("");
-        setMessages((prev) => [...prev, { from: "bot", text: "Đây là phản hồi tự động." }]);
+
+        try {
+            const response = await fetch("http://localhost:8080/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message: fullMessage }),
+            });
+
+            const data = await response.json();
+            setMessages((prev) => [...prev, { from: "bot", text: data.response || "Không có phản hồi." }]);
+        } catch (err) {
+            setMessages((prev) => [...prev, { from: "bot", text: "Lỗi khi gửi tin nhắn." }]);
+        }
     };
 
     const animatedStyle = {
@@ -37,33 +58,15 @@ export default function ChatBotIcon() {
         <div style={{ position: "fixed", bottom: "20px", right: "2px", zIndex: 9999 }}>
             {isOpen ? (
                 <div style={animatedStyle}>
-                    <Card
-                        style={{
-                            width: "600px",
-                            height: "600px",
-                            borderRadius: "10px",
-                        }}
-                    >
+                    <Card style={{ width: "400px", height: "400px", borderRadius: "10px" }}>
                         <Card.Header className="d-flex justify-content-between align-items-center">
                             <span>Chat Bot</span>
                             <Button variant="outline-secondary" size="sm" onClick={toggleChat}>✕</Button>
                         </Card.Header>
-                        <Card.Body
-                            style={{
-                                maxHeight: "600px",
-                                height: "600px",
-                                borderRadius: "10px",
-                                overflowY: "auto",
-                            }}
-                        >
+                        <Card.Body style={{ maxHeight: "600px", height: "600px", overflowY: "auto" }}>
                             {messages.map((msg, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`mb-2 text-${msg.from === "user" ? "end" : "start"}`}
-                                >
-                                    <span
-                                        className={`p-2 rounded bg-${msg.from === "user" ? "primary text-white" : "light"}`}
-                                    >
+                                <div key={idx} className={`mb-2 text-${msg.from === "user" ? "end" : "start"}`}>
+                                    <span className={`p-2 rounded bg-${msg.from === "user" ? "primary text-white" : "light"}`}>
                                         {msg.text}
                                     </span>
                                 </div>

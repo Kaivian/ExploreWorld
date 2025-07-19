@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -356,6 +356,7 @@ export default function VietnamMap() {
     }
 
     useEffect(() => {
+        sessionStorage.setItem("city", "Việt Nam");
         if (map.current) return;
 
         const initMap = async () => {

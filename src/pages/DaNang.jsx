@@ -2,8 +2,8 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RestaurantDetails from "../components/RestaurantDetails";
 import HeaderWithSidebar from "../components/HeaderWithSidebar";
+import RestaurantDetails from "../components/RestaurantDetails";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -14,8 +14,13 @@ export default function DaNang() {
     const daNangMapRef = useRef(null);
     const navigate = useNavigate();
     const restaurantLoaded = useRef(false);
+
     const [selectedRestaurant, setSelectedRestaurant] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [currentZoom, setCurrentZoom] = useState(9);              // NEW
+
+    // (Optional) Lưu kết quả tìm kiếm khi zoom chưa đủ
+    const pendingSearchResultsRef = useRef(null);
 
     const center = [108.2022, 15.8544];
     const zoom = 9;
@@ -39,11 +44,14 @@ export default function DaNang() {
     };
 
     const renderMarkers = (data) => {
+        if (!map.current) return;
         clearMarkers();
 
         const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 25 });
 
         data.forEach((place) => {
+            if (place.longitude == null || place.latitude == null) return;
+
             const marker = new mapboxgl.Marker({ color: '#ff6347' })
                 .setLngLat([place.longitude, place.latitude])
                 .addTo(map.current);
@@ -51,8 +59,11 @@ export default function DaNang() {
             const markerEl = marker.getElement();
 
             markerEl.addEventListener("mouseenter", () => {
-                popup.setLngLat([place.longitude, place.latitude])
-                    .setHTML(`<div style="font-size: 14px; padding: 6px 10px;"><strong>${place.name}</strong></div>`)
+                popup
+                    .setLngLat([place.longitude, place.latitude])
+                    .setHTML(
+                        `<div style="font-size: 14px; padding: 6px 10px;"><strong>${place.name}</strong></div>`
+                    )
                     .addTo(map.current);
             });
 
@@ -97,7 +108,6 @@ export default function DaNang() {
 
     const createLabelFeatures = (geojson) => {
         const labelMap = {};
-
         geojson.features.forEach((feature) => {
             const name = feature.properties.NAME_2 || feature.properties.NAME_1;
             let area = 0;
@@ -258,6 +268,8 @@ export default function DaNang() {
 
         map.current.on("zoom", () => {
             const z = map.current.getZoom();
+            setCurrentZoom(z); // NEW: cập nhật state zoom
+
             const centerNow = map.current.getCenter();
 
             if (z <= 8) {
@@ -267,10 +279,19 @@ export default function DaNang() {
                 return;
             }
 
-            if (z >= 11 && !restaurantLoaded.current && !isSearching) {
-                loadRestaurants();
-                if (map.current.getLayer("da-nang-border")) {
-                    map.current.removeLayer("da-nang-border");
+            if (z >= 11) {
+                // Nếu chưa load restaurants (và không đang search) thì load
+                if (!restaurantLoaded.current && !isSearching) {
+                    loadRestaurants();
+                    if (map.current.getLayer("da-nang-border")) {
+                        map.current.removeLayer("da-nang-border");
+                    }
+                }
+                // Nếu có pending kết quả search khi zoom thấp trước đó -> render
+                if (pendingSearchResultsRef.current) {
+                    clearMarkers();
+                    renderMarkers(pendingSearchResultsRef.current);
+                    pendingSearchResultsRef.current = null;
                 }
             }
 
@@ -292,20 +313,38 @@ export default function DaNang() {
                 }
             }
         });
-    }, []);
+    }, [isSearching, navigate]);
 
     return (
         <div style={{ position: "relative", height: "100vh", width: "100vw" }}>
-            <div ref={mapContainer} style={{ height: "100%", width: "100%", position: "absolute", zIndex: 1 }} />
+            <div
+                ref={mapContainer}
+                style={{ height: "100%", width: "100%", position: "absolute", zIndex: 1 }}
+            />
 
             <HeaderWithSidebar
+                zoom={currentZoom}               // NEW: truyền zoom
                 onSearchResults={(results) => {
                     setIsSearching(true);
-                    renderMarkers(results);
+                    if (currentZoom >= 11) {
+                        renderMarkers(results);
+                        restaurantLoaded.current = true; // đánh dấu đã có dữ liệu
+                    } else {
+                        // Lưu tạm, chờ user zoom in
+                        pendingSearchResultsRef.current = results;
+                        // Có thể hiển thị toast/notification tại HeaderWithSidebar
+                        // ví dụ: toast.info("Zoom in (>= 11) to see search results on map.");
+                    }
                 }}
                 onClearSearch={() => {
                     setIsSearching(false);
-                    loadRestaurants();
+                    pendingSearchResultsRef.current = null;
+                    if (currentZoom >= 11) {
+                        loadRestaurants();
+                    } else {
+                        clearMarkers();
+                        restaurantLoaded.current = false;
+                    }
                 }}
                 sidebarWidth={600}
                 authWidth={200}

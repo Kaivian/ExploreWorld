@@ -1,27 +1,31 @@
 package com.nomnomatlas.controller;
 
 import com.nomnomatlas.service.GeminiService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api")
 public class ChatController {
 
-    @Autowired
-    private GeminiService geminiService;
+    private final GeminiService geminiService;
 
-    @PostMapping
-    public ResponseEntity<String> chat(@RequestBody Map<String, String> payload) {
-        String message = payload.get("message");
-        String reply = geminiService.chatWithGemini(message);
-        return ResponseEntity.ok(reply);
+    public ChatController(GeminiService geminiService) {
+        this.geminiService = geminiService;
+    }
+
+    // DTOs (records) bên trong hoặc tách file riêng
+    public record ChatRequest(String message) {}
+    public record ChatResponse(String reply) {}
+
+    @PostMapping(
+            value = "/chat",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
+        String reply = geminiService.chatWithGemini(request.message());
+        return ResponseEntity.ok(new ChatResponse(reply));
     }
 }
-

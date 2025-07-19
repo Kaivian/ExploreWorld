@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function HeaderWithSidebar({
-    onSearchResults,
-    onClearSearch,
     sidebarWidth = 600,
     authWidth = 52,
 }) {
@@ -11,95 +9,78 @@ export default function HeaderWithSidebar({
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [dishList, setDishList] = useState([]);
+    const [selectedDish, setSelectedDish] = useState(null); // Dish selected for detail
 
-    const navigate = useNavigate();
-
+    // Fetch all dishes based on cityID
     useEffect(() => {
         const cityID = sessionStorage.getItem("cityID") || 1;
 
         fetch(`http://localhost:8080/api/city/${cityID}/dishes`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to fetch dishes by city");
-                return res.json();
-            })
+            .then((res) => res.json())
             .then(setDishList)
             .catch((err) => console.error("Error loading city dishes:", err));
     }, []);
 
-    // Responsive layout updates
+    // Update window width
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Handle search query debounce
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            const trimmed = query.trim();
-
-            if (!trimmed) {
-                onClearSearch?.();
-                return;
-            }
-
-            const url = new URL("http://localhost:8080/api/restaurants/search");
-            url.searchParams.append("dishName", trimmed);
-
-            fetch(url)
-                .then((res) => {
-                    if (!res.ok) throw new Error("Search failed");
-                    return res.json();
-                })
-                .then((data) => {
-                    onSearchResults?.(data);
-                    navigate("/da-nang");
-                })
-                .catch((err) => {
-                    console.error("Search failed:", err);
-                    onSearchResults?.([]);
-                });
-        }, 500);
-
-        return () => clearTimeout(timeout);
-    }, [query]);
-
-    // Open sidebar automatically if user is typing
+    // Auto open sidebar when typing
     useEffect(() => {
         if (query.trim()) setSidebarOpen(true);
     }, [query]);
 
-    // Filter dishes by search query
+    // Filter dishes
     const filteredDishes = query.trim()
-        ? dishList.filter(d => d.name.toLowerCase().includes(query.trim().toLowerCase()))
+        ? dishList.filter(d =>
+            d.name.toLowerCase().includes(query.trim().toLowerCase())
+        )
         : [];
 
-    // Layout calculations
-    const GAP = windowWidth < 768 ? 70 : 20;
-    const MIN_WIDTH = 200;
-    const MAX_WIDTH = 600;
+    // Handle click dish => fetch detail
+    const handleDishClick = (dishId) => {
+        fetch(`http://localhost:8080/api/dish/${dishId}`)
+            .then((res) => res.json())
+            .then((data) => {
+                setSelectedDish(data);
+                setSidebarOpen(true);
+            })
+            .catch((err) => console.error("Failed to fetch dish detail:", err));
+    };
 
-    const effectiveSidebarWidth = sidebarOpen ? sidebarWidth : 0;
-    const leftOffset = sidebarOpen ? effectiveSidebarWidth + GAP : 0;
-    const rightOffset = authWidth + GAP;
-    const availableWidth = windowWidth - leftOffset - rightOffset;
-    const searchBarWidth = Math.max(Math.min(MAX_WIDTH, availableWidth), MIN_WIDTH);
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+        if (sidebarOpen) setSelectedDish(null);
+    };
+
+    const GAP = 20;
+    const RIGHT_OFFSET = authWidth + GAP;
+    const searchBarWidth = sidebarOpen ? 400 : 600;
 
     const searchBarStyle = {
         position: "fixed",
         top: 8,
-        left: leftOffset + (availableWidth / 2) - (searchBarWidth / 2),
-        width: `${searchBarWidth}px`,
         zIndex: 1040,
         transition: "all 0.3s ease",
         pointerEvents: "auto",
+        ...(sidebarOpen
+            ? {
+                width: "470px",
+                left: "40%",
+            }
+            : {
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "600px",
+            }),
     };
-
-    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
     return (
         <>
-            {/* Sidebar Toggle Button */}
+            {/* Toggle Sidebar Button */}
             <button
                 className="btn position-fixed top-0 start-0 m-2"
                 style={{ zIndex: 1060, backgroundColor: "#ffffff" }}
@@ -108,7 +89,7 @@ export default function HeaderWithSidebar({
                 ☰
             </button>
 
-            {/* Sidebar with dish results */}
+            {/* Sidebar */}
             <div
                 className="position-fixed top-0 start-0 h-100 border-end shadow"
                 style={{
@@ -123,17 +104,39 @@ export default function HeaderWithSidebar({
                     overflowY: "auto",
                 }}
             >
-                <h5>Kết quả tìm kiếm</h5>
-                {query.trim() === "" ? (
+                {selectedDish ? (
                     <>
-                        <p className="text-muted">Gợi ý một số món ăn</p>
+                        <h4>{selectedDish.name}</h4>
+                        <p><strong>City:</strong> {selectedDish.cityName}</p>
+                        <p><strong>Category:</strong> {selectedDish.categoryName}</p>
+                        {selectedDish.dishImageDTOList?.length > 0 ? (
+                            selectedDish.dishImageDTOList.map((img, index) => (
+                                <img
+                                    key={index}
+                                    src={img.imageUrl}
+                                    alt={selectedDish.name}
+                                    style={{
+                                        width: "100%",
+                                        borderRadius: "8px",
+                                        objectFit: "cover",
+                                        marginBottom: "12px",
+                                    }}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-muted">No images available.</p>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <h5>{query.trim() ? "Kết quả tìm kiếm" : "Gợi ý món ăn"}</h5>
                         <ul className="list-unstyled">
-                            {dishList.slice(0, 5).map((dish) => (
+                            {(query.trim() ? filteredDishes : dishList.slice(0, 5)).map((dish) => (
                                 <li key={dish.id} className="py-2 border-bottom">
-                                    <Link
-                                        to={`/dish/${dish.id}`}
-                                        className="text-decoration-none d-flex align-items-center"
-                                        onClick={toggleSidebar}
+                                    <div
+                                        className="text-decoration-none d-flex align-items-center cursor-pointer"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => handleDishClick(dish.id)}
                                     >
                                         <img
                                             src={dish.imageUrl}
@@ -147,38 +150,14 @@ export default function HeaderWithSidebar({
                                             }}
                                         />
                                         <span>{dish.name}</span>
-                                    </Link>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
+                        {query.trim() && filteredDishes.length === 0 && (
+                            <p className="text-muted">Không tìm thấy món ăn nào</p>
+                        )}
                     </>
-                ) : filteredDishes.length === 0 ? (
-                    <p className="text-muted">Không tìm thấy món ăn nào</p>
-                ) : (
-                    <ul className="list-unstyled">
-                        {filteredDishes.map((dish) => (
-                            <li key={dish.id} className="py-2 border-bottom">
-                                <Link
-                                    to={`/dish/${dish.id}`}
-                                    className="text-decoration-none d-flex align-items-center"
-                                    onClick={toggleSidebar}
-                                >
-                                    <img
-                                        src={dish.imageUrl}
-                                        alt={dish.name}
-                                        style={{
-                                            width: "48px",
-                                            height: "48px",
-                                            objectFit: "cover",
-                                            borderRadius: "8px",
-                                            marginRight: "12px"
-                                        }}
-                                    />
-                                    <span>{dish.name}</span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
                 )}
             </div>
 
@@ -198,7 +177,10 @@ export default function HeaderWithSidebar({
                     className="form-control shadow-sm"
                     placeholder="Tìm kiếm món ăn, nhà hàng..."
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                        setQuery(e.target.value);
+                        setSelectedDish(null);
+                    }}
                     style={{
                         height: "40px",
                         borderRadius: "999px",
